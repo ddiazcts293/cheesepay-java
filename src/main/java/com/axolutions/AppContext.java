@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import com.axolutions.db.*;
 import com.axolutions.section.*;
+import com.axolutions.util.Console;
+import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
 public class AppContext 
 {
@@ -13,9 +15,11 @@ public class AppContext
 
     // Instancia compartida de Scanner
     private Scanner scanner;
-
+    // Instancia compartida de Console
+    private Console console;
     // Contexto de la base de datos
     private DbContext dbContext;
+    // Envoltorio de la conexión con la base de datos
     private DbConnectionWrapper dbConnectionWrapper;
 
     /**
@@ -151,22 +155,55 @@ public class AppContext
         }
     }
 
-    public void showScreen(Destination option)
+    /**
+     * Muestra una sección y regresa luego de terminar.
+     * 
+     * @param destination Destino
+     */
+    public void goToAndReturn(Destination destination)
     {
 
     }
 
+    /**
+     * Obtiene la instancia compartida de Scanner
+     * 
+     * @return Objeto Scanner
+     */
     public Scanner getScanner()
     {
         return scanner;
     }
 
+    /**
+     * Obtiene la instancia compartida de DbContext.
+     * 
+     * @return Objeto DbContext
+     */
     public DbContext getDbContext() 
     {
         return dbContext;
     }
 
-    public void login(String user, String password) throws SQLException
+    /**
+     * Obtiene la instancia compartida de Console.
+     * 
+     * @return Objeto Console
+     */
+    public Console getConsole() 
+    {
+        return console;
+    }
+
+    /**
+     * Realiza el inicio de sesión.
+     * 
+     * @param user Nombre de usuario
+     * @param password Contraseña
+     * @throws SQLException Error de acceso
+     * @throws CommunicationsException Error de conexión
+     */
+    public void login(String user, String password) throws SQLException, CommunicationsException
     {
         dbConnectionWrapper.create(user, password);
         isConnected = true;
