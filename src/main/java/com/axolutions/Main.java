@@ -18,6 +18,7 @@ public class Main {
         // Comienza la diversión
         appContext.run();
 
+        // Cierra el objeto Scanner
         scanner.close();
     }
 
