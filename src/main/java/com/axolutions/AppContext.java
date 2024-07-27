@@ -27,7 +27,7 @@ public class AppContext
      * Almacena las instancias de todas los paneles del programa basándose en
      * un identificador asignado.
      */
-    private HashMap<Destination, BasePanel> panels;
+    private HashMap<Location, BasePanel> panels;
 
     /**
      * Constructor principal.
@@ -46,16 +46,16 @@ public class AppContext
         this.panels = new HashMap<>();
 
         // Registra las instancias de los paneles en el HashMap
-        panels.put(Destination.MainMenu, new MainMenuPanel());
-        panels.put(Destination.LoginPanel, new LoginPanel());
-        panels.put(Destination.StudentRegistrationPanel, new StudentRegistrationPanel());
-        panels.put(Destination.PaymentRegistrationPanel, new PaymentRegistrationPanel());
-        panels.put(Destination.SearchPanel, new SearchPanel());
-        panels.put(Destination.StudentInformationPanel, new StudentInformationPanel());
-        panels.put(Destination.GroupQueryPanel, new GroupQueryPanel());
-        panels.put(Destination.PaymentQueryPanel, new PaymentQueryPanel());
-        panels.put(Destination.ControlPanel, new ControlPanel());
-        panels.put(Destination.LoginPanel, new LoginPanel());
+        panels.put(Location.MainMenu, new MainMenuPanel());
+        panels.put(Location.LoginPanel, new LoginPanel());
+        panels.put(Location.StudentRegistrationPanel, new StudentRegistrationPanel());
+        panels.put(Location.PaymentRegistrationPanel, new PaymentRegistrationPanel());
+        panels.put(Location.SearchPanel, new SearchPanel());
+        panels.put(Location.StudentInformationPanel, new StudentInformationPanel());
+        panels.put(Location.GroupQueryPanel, new GroupQueryPanel());
+        panels.put(Location.PaymentQueryPanel, new PaymentQueryPanel());
+        panels.put(Location.ControlPanel, new ControlPanel());
+        panels.put(Location.LoginPanel, new LoginPanel());
     }
 
     /**
@@ -79,25 +79,30 @@ public class AppContext
                 // Variable que almacenará el panel a mostrar
                 BasePanel panel;
                 // Variables para controlar el desplazamiento entre paneles
-                Destination nextDestination;
-                Destination currentDestination;
-                Destination previousDestination;
+                Location nextDestination;
+                Location currentDestination;
+                Location previousDestination;
+                // Variables que contienen información transferida entre paneles
+                PanelTransition transition;
+                Object obj = null;
                 
                 // Obtiene la instancia del panel de inicio de sesión
-                panel = panels.get(Destination.LoginPanel);
+                panel = panels.get(Location.LoginPanel);
                 // Muestra el panel de inicio de sesión
-                nextDestination = panel.show(this);
+                transition = panel.show(this, null);
 
                 // Verifica si se indicó salir del programa o si no se ha
                 // realizado la conexión con la base de datos
-                if (nextDestination == Destination.Exit || !isConnected)
+                if (transition == null || 
+                    transition.location == Location.Exit || 
+                    !isConnected)
                 {
                     // Termina el bucle
                     break;
                 }
 
                 // Establece el destino actual como el menú principal
-                currentDestination = Destination.MainMenu; 
+                currentDestination = Location.MainMenu; 
                 // Establece el próximo destino también como el menú principal
                 nextDestination = currentDestination;
                 
@@ -112,28 +117,37 @@ public class AppContext
                     panel = panels.get(nextDestination);
                     // Establece el destino actual
                     currentDestination = nextDestination;
-                    // Muestra el panel actual y espera a obtener un nuevo
-                    // destino. 
-                    nextDestination = panel.show(this);
+                    // Muestra el panel actual y espera a obtener un objeto de
+                    // transición
+                    transition = panel.show(
+                        this, 
+                        new PanelTransition(previousDestination, obj));
 
-                    // Verifica si se indicó un destino nulo
-                    if (nextDestination == null)
+                    // Verifica si el objeto de transición es nulo
+                    if (transition == null || transition.location == null)
                     {
                         // Establece el menú principal como destino
-                        nextDestination = Destination.MainMenu;
+                        nextDestination = Location.MainMenu;
+                        obj = null;
                     }
+                    else
+                    {
+                        nextDestination = transition.location;
+                        obj = transition.obj;
+                    }
+
                     // Verifica si se indicó salir de programa
-                    else if (nextDestination == Destination.Exit)
+                    if (nextDestination == Location.Exit)
                     {
                         // Establece que no se deberá volver a iniciar sesión
                         loginAgain = false;
                         break;
                     }
                     // Verifica si se indicó salir de la sesión sesión
-                    else if (nextDestination == Destination.LoginPanel)
+                    else if (nextDestination == Location.LoginPanel)
                     {
                         // Verifica si el panel anterior era el menú principal
-                        if (currentDestination == Destination.MainMenu)
+                        if (currentDestination == Location.MainMenu)
                         {
                             // Cierra la conexión con la base de datos
                             dbConnectionWrapper.close();
@@ -142,17 +156,17 @@ public class AppContext
                         // Si no lo es, lo dirige al menú principal
                         else
                         {
-                            nextDestination = Destination.MainMenu;
+                            nextDestination = Location.MainMenu;
                         }
                     }
                     // Verifica si se indicó regresar al panel anterior
-                    else if (nextDestination == Destination.Back)
+                    else if (nextDestination == Location.Previous)
                     {
                         nextDestination = previousDestination;
                     }
                     else if (!panels.containsKey(nextDestination))
                     {
-                        nextDestination = Destination.MainMenu;
+                        nextDestination = Location.MainMenu;
                     }
                 } while (true);
                 
@@ -168,7 +182,7 @@ public class AppContext
      * 
      * @param destination Destino
      */
-    public void goToAndReturn(Destination destination)
+    public void goToAndReturn(Location destination)
     {
         throw new UnsupportedOperationException("Unimplemented method");
     }

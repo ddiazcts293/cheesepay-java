@@ -1,9 +1,9 @@
 package com.axolutions.panel;
 
-public enum Destination 
+public enum Location 
 {
     Exit,
-    Back,
+    Previous,
     MainMenu,
     LoginPanel,
     StudentRegistrationPanel,

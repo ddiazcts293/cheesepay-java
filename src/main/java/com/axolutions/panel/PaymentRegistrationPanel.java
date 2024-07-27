@@ -2,7 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public class PaymentRegistrationPanel implements BasePanel
+public class PaymentRegistrationPanel extends BasePanel
 {
     /**
      * TODO: Panel de registro de pagos
@@ -25,7 +25,7 @@ public class PaymentRegistrationPanel implements BasePanel
      */
 
     @Override
-    public Destination show(AppContext appContext) 
+    public PanelTransition show(AppContext appContext, PanelTransition args) 
     {
         System.out.println("Panel de registro de pagos");
 

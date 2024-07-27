@@ -2,7 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public class SearchPanel implements BasePanel 
+public class SearchPanel extends BasePanel 
 {
     /**
      * TODO: Panel de búsqueda
@@ -27,7 +27,7 @@ public class SearchPanel implements BasePanel
      */
 
     @Override
-    public Destination show(AppContext appContext) 
+    public PanelTransition show(AppContext appContext, PanelTransition args) 
     {
         System.out.println("Panel de búsqueda");
         return null;

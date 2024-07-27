@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import com.axolutions.AppContext;
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
-public class LoginPanel implements BasePanel
+public class LoginPanel extends BasePanel
 {
     /**
      * Panel de inicio de sesión
@@ -23,7 +23,7 @@ public class LoginPanel implements BasePanel
      * contraseña sin mostrarla en pantalla.
      */
 
-    public Destination show(AppContext appContext)
+    public PanelTransition show(AppContext appContext, PanelTransition args)
     {
         var console = appContext.getConsole();
         String user, password;
@@ -47,7 +47,7 @@ public class LoginPanel implements BasePanel
                 System.out.println(e.getMessage());
                 
                 // Terminar programa
-                return Destination.Exit;
+                return nextDestination(Location.Exit);
             }
             // Captura un error en las credenciales de acceso
             catch (SQLException e)
@@ -63,6 +63,6 @@ public class LoginPanel implements BasePanel
         System.out.println("ok");
         
         // Retorna al menú principal
-        return Destination.MainMenu;
+        return nextDestination(Location.MainMenu);
     }
 }

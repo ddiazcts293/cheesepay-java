@@ -2,7 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public class ControlPanel implements BasePanel
+public class ControlPanel extends BasePanel
 {
     /**
      * TODO: Panel de control
@@ -29,7 +29,7 @@ public class ControlPanel implements BasePanel
      */
     
     @Override
-    public Destination show(AppContext appContext)
+    public PanelTransition show(AppContext appContext, PanelTransition args)
     {
         System.out.println("Panel de control");
         return null;

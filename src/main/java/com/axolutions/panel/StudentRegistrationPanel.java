@@ -2,7 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public class StudentRegistrationPanel implements BasePanel 
+public class StudentRegistrationPanel extends BasePanel 
 {
     /**
      * TODO: Panel de registro de alumnos
@@ -29,14 +29,14 @@ public class StudentRegistrationPanel implements BasePanel
      */
 
     @Override
-    public Destination show(AppContext appContext) 
+    public PanelTransition show(AppContext appContext, PanelTransition args) 
     {
         System.out.println("Panel de registro de alumnos");
         
         System.out.print("Presione una tecla...");
         appContext.getScanner().nextLine();
 
-        return Destination.Back;
+        return nextDestination(Location.Previous);
     }
     
 }

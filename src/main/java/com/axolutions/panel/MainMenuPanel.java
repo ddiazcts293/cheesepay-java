@@ -2,7 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public class MainMenuPanel implements BasePanel
+public class MainMenuPanel extends BasePanel
 {
     /**
      * Menú principal
@@ -18,7 +18,7 @@ public class MainMenuPanel implements BasePanel
      */
 
     @Override
-    public Destination show(AppContext appContext) 
+    public PanelTransition show(AppContext appContext, PanelTransition args) 
     {
         System.out.println("Menú principal");
 
@@ -33,27 +33,27 @@ public class MainMenuPanel implements BasePanel
         menu.AddItem("8", "Cambiar de cuenta");
         menu.AddItem("9", "Salir");
 
-        String option = menu.show();
+        String option = menu.show();        
         switch (option) 
         {
             case "1":
-                return Destination.StudentRegistrationPanel;
+                return nextDestination(Location.StudentRegistrationPanel);
             case "2":
-                return Destination.PaymentRegistrationPanel;
+                return nextDestination(Location.PaymentRegistrationPanel);
             case "3":
-                return Destination.SearchPanel;
+                return nextDestination(Location.SearchPanel);
             case "4":
-                return Destination.StudentInformationPanel;
+                return nextDestination(Location.StudentInformationPanel);
             case "5":
-                return Destination.GroupQueryPanel;
+                return nextDestination(Location.GroupQueryPanel);
             case "6":
-                return Destination.PaymentQueryPanel;
+                return nextDestination(Location.PaymentQueryPanel);
             case "7":
-                return Destination.ControlPanel;
+                return nextDestination(Location.ControlPanel);
             case "8":
-                return Destination.LoginPanel;
+                return nextDestination(Location.LoginPanel);
             default:
-                return Destination.Exit;
+                return nextDestination(Location.Exit);
         }
     }
 }

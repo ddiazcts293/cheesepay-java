@@ -2,7 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public class PaymentQueryPanel implements BasePanel
+public class PaymentQueryPanel extends BasePanel
 {
     /**
      * TODO: Panel de consulta de cobros
@@ -18,10 +18,9 @@ public class PaymentQueryPanel implements BasePanel
      */
 
     @Override
-    public Destination show(AppContext appContext) 
+    public PanelTransition show(AppContext appContext, PanelTransition args) 
     {
         System.out.println("Panel de consulta de cobros");
         return null;
     }
-
 }
