@@ -33,6 +33,11 @@ public class Console
         return result;
     }
 
+    public String readPassword(String prompt)
+    {
+        return readPassword(prompt, 0, Integer.MAX_VALUE);
+    }
+
     public String readPassword(String prompt, int minLength, int maxLength)
     {
         char[] array;
