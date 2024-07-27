@@ -1,8 +1,8 @@
-package com.axolutions.section;
+package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
-public interface SectionBase 
+public interface BasePanel 
 {
     Destination show(AppContext appContext);
 }

@@ -4,8 +4,9 @@ import java.util.Scanner;
 import java.sql.SQLException;
 import java.util.HashMap;
 import com.axolutions.db.*;
-import com.axolutions.section.*;
+import com.axolutions.panel.*;
 import com.axolutions.util.Console;
+import com.axolutions.util.Menu;
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
 public class AppContext 
@@ -23,10 +24,10 @@ public class AppContext
     private DbConnectionWrapper dbConnectionWrapper;
 
     /**
-     * Almacena las instancias de todas las secciones del programa basándose en
+     * Almacena las instancias de todas los paneles del programa basándose en
      * un identificador asignado.
      */
-    private HashMap<Destination, SectionBase> sectionInstances;
+    private HashMap<Destination, BasePanel> panels;
 
     /**
      * Constructor principal.
@@ -39,14 +40,22 @@ public class AppContext
         // Inicialización de variables
         this.isRunning = false;
         this.scanner = scanner;
+        this.console = new Console(scanner);
         this.dbConnectionWrapper = new DbConnectionWrapper(dbConnectionString);
         this.dbContext = new DbContext(dbConnectionWrapper);
-        this.sectionInstances = new HashMap<>();
+        this.panels = new HashMap<>();
 
-        // Registra las instancias de las pantallas en el HashMap
-        sectionInstances.put(Destination.MainMenu, new MainMenuSection());
-        sectionInstances.put(Destination.LoginSection, new LoginSection());
-        sectionInstances.put(Destination.StudentRegistrationSection, new StudentRegistrationSection());
+        // Registra las instancias de los paneles en el HashMap
+        panels.put(Destination.MainMenu, new MainMenuPanel());
+        panels.put(Destination.LoginPanel, new LoginPanel());
+        panels.put(Destination.StudentRegistrationPanel, new StudentRegistrationPanel());
+        panels.put(Destination.PaymentRegistrationPanel, new PaymentRegistrationPanel());
+        panels.put(Destination.SearchPanel, new SearchPanel());
+        panels.put(Destination.StudentInformationPanel, new StudentInformationPanel());
+        panels.put(Destination.GroupQueryPanel, new GroupQueryPanel());
+        panels.put(Destination.PaymentQueryPanel, new PaymentQueryPanel());
+        panels.put(Destination.ControlPanel, new ControlPanel());
+        panels.put(Destination.LoginPanel, new LoginPanel());
     }
 
     /**
@@ -67,18 +76,17 @@ public class AppContext
             // Va a repetir el ciclo de inicio de sesión una y otra vez
             do 
             {
-                // Variable que almacenará la sección mostrada
-                SectionBase section;
-                // Variables para almacenar los destinos próximo destino, actual
-                // y anterior
+                // Variable que almacenará el panel a mostrar
+                BasePanel panel;
+                // Variables para controlar el desplazamiento entre paneles
                 Destination nextDestination;
                 Destination currentDestination;
                 Destination previousDestination;
                 
-                // Obtiene la instancia de la sección de inicio de sesión
-                section = sectionInstances.get(Destination.LoginSection);
-                // Muestra la sección de inicio de sesión
-                nextDestination = section.show(this);
+                // Obtiene la instancia del panel de inicio de sesión
+                panel = panels.get(Destination.LoginPanel);
+                // Muestra el panel de inicio de sesión
+                nextDestination = panel.show(this);
 
                 // Verifica si se indicó salir del programa o si no se ha
                 // realizado la conexión con la base de datos
@@ -99,14 +107,14 @@ public class AppContext
                 do
                 {
                     previousDestination = currentDestination;
-                    // Obtiene la instancia de la sección indicada por la 
-                    // variable de próximo destino
-                    section = sectionInstances.get(nextDestination);
+                    // Obtiene la instancia del panel dada por la  variable de
+                    // próximo destino
+                    panel = panels.get(nextDestination);
                     // Establece el destino actual
                     currentDestination = nextDestination;
-                    // Muestra la sección actual y espera a obtener un nuevo
+                    // Muestra el panel actual y espera a obtener un nuevo
                     // destino. 
-                    nextDestination = section.show(this);
+                    nextDestination = panel.show(this);
 
                     // Verifica si se indicó un destino nulo
                     if (nextDestination == null)
@@ -122,9 +130,9 @@ public class AppContext
                         break;
                     }
                     // Verifica si se indicó salir de la sesión sesión
-                    else if (nextDestination == Destination.LoginSection)
+                    else if (nextDestination == Destination.LoginPanel)
                     {
-                        // Verifica si la sección anterior era el menú principal
+                        // Verifica si el panel anterior era el menú principal
                         if (currentDestination == Destination.MainMenu)
                         {
                             // Cierra la conexión con la base de datos
@@ -137,12 +145,12 @@ public class AppContext
                             nextDestination = Destination.MainMenu;
                         }
                     }
-                    // Verifica si se indicó regresar a la sección anterior
+                    // Verifica si se indicó regresar al panel anterior
                     else if (nextDestination == Destination.Back)
                     {
                         nextDestination = previousDestination;
                     }
-                    else if (!sectionInstances.containsKey(nextDestination))
+                    else if (!panels.containsKey(nextDestination))
                     {
                         nextDestination = Destination.MainMenu;
                     }
@@ -156,13 +164,13 @@ public class AppContext
     }
 
     /**
-     * Muestra una sección y regresa luego de terminar.
+     * Muestra un panel y regresa luego de terminar.
      * 
      * @param destination Destino
      */
     public void goToAndReturn(Destination destination)
     {
-
+        throw new UnsupportedOperationException("Unimplemented method");
     }
 
     /**
@@ -196,6 +204,26 @@ public class AppContext
     }
 
     /**
+     * Devuelve un valor que indica si se ha conectado con la base de datos.
+     * 
+     * @return TRUE si es así, de lo contrario FALSE
+     */
+    public boolean isConnected()
+    {
+        return isConnected;
+    }
+
+    /**
+     * Crea un objeto para crear menús interactivos.
+     * 
+     * @return Objeto Menu
+     */
+    public Menu createMenu()
+    {
+        return new Menu(scanner);
+    }
+
+    /**
      * Realiza el inicio de sesión.
      * 
      * @param user Nombre de usuario
@@ -205,7 +233,7 @@ public class AppContext
      */
     public void login(String user, String password) throws SQLException, CommunicationsException
     {
-        dbConnectionWrapper.create(user, password);
+        //dbConnectionWrapper.create(user, password);
         isConnected = true;
     }
 }
