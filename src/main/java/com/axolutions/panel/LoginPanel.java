@@ -23,14 +23,20 @@ public class LoginPanel extends BasePanel
      * contraseña sin mostrarla en pantalla.
      */
 
-    public PanelTransition show(AppContext appContext, PanelTransition args)
+    public LoginPanel(AppContext appContext)
     {
-        var console = appContext.getConsole();
+        super(appContext);
+    }
+
+    public PanelTransitionArgs show(PanelTransitionArgs args)
+    {
         String user, password;
 
         System.out.println("Bienvenido a CheesePay v1.0");
         
         do {
+            System.out.println();
+            
             user = console.readString("Ingrese su usuario");
             password = console.readPassword("Contraseña");
             
@@ -44,7 +50,6 @@ public class LoginPanel extends BasePanel
             catch (CommunicationsException e)
             {
                 System.out.println("error de conexión");
-                System.out.println(e.getMessage());
                 
                 // Terminar programa
                 return nextDestination(Location.Exit);
@@ -53,7 +58,6 @@ public class LoginPanel extends BasePanel
             catch (SQLException e)
             {
                 System.out.println("acceso denegado");
-                System.out.println(e.getMessage());
                 
                 // Volver a pedir las credenciales
             }

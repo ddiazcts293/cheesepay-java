@@ -9,7 +9,7 @@ public class PaymentRegistrationPanel extends BasePanel
      * 
      * En este panel se podrán registrar todos los pagos que un alumno efectue
      * 
-     * Algoritmo
+     * ALGORITMO
      * 1. Inicio
      * 2. Preguntar si se conoce la matricula del alumno, si se conoce, 
      *    solicitarla; sino, buscar en el panel de busqueda.
@@ -22,10 +22,19 @@ public class PaymentRegistrationPanel extends BasePanel
      * 9. Si el pago es de inscripción, entonces el alumno deberá ser asignado
      *    a un grupo y nivel educativo
      * 10. Fin
+     * 
+     * CONSULTAS
+     * - Registrar un pago que contiene diferentes cobros
+     * - Registrar a un alumno en un grupo
      */
 
+    public PaymentRegistrationPanel(AppContext appContext)
+    {
+        super(appContext);
+    }
+
     @Override
-    public PanelTransition show(AppContext appContext, PanelTransition args) 
+    public PanelTransitionArgs show(PanelTransitionArgs args) 
     {
         System.out.println("Panel de registro de pagos");
 

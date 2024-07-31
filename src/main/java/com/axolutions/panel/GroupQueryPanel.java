@@ -13,14 +13,27 @@ public class GroupQueryPanel extends BasePanel
      * 2. Preguntar el ciclo escolar, nivel educativo, grado y grupo ya sea 
      *    mostrando un menú para cada opción o que el usuario lo ingrese 
      *    directamente
-     * 3. Mostrar los alumnos que pertenece a esos grupos
+     * 3. Mostrar los alumnos que pertenecen a esos grupos
      * 4. Fin
+     * 
+     * CONSULTAS:
+     * - Obtener lista de alumnos de un grupo en un ciclo y nivel educativo
+     *   DATOS:
+     *   - 
      */
 
+    public GroupQueryPanel(AppContext appContext)
+    {
+        super(appContext);
+    }
+
     @Override
-    public PanelTransition show(AppContext appContext, PanelTransition args) 
+    public PanelTransitionArgs show(PanelTransitionArgs args) 
     {
         System.out.println("Panel de consulta de grupos");
+
+
+
         return null;
     }
 }

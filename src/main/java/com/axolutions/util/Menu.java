@@ -29,22 +29,35 @@ public class Menu
 
     private Scanner scanner;
     private ArrayList<MenuItem> items;
+    private String title;
 
     public Menu(Scanner scanner)
     {
         this.scanner = scanner;
         this.items = new ArrayList<>();
+        this.title = "";
     }
 
-    public Menu AddItem(String key, String text)
+    public Menu(Scanner scanner, String title)
+    {
+        this(scanner);
+        this.title = title;
+    }
+
+    public Menu addItem(String key, String text)
     {
         items.add(new MenuItem(key, text));
         return this;
     }
 
-    public void clear()
+    public void clearItems()
     {
         items.clear();
+    }
+
+    public void setTitle(String title) 
+    {
+        this.title = title;
     }
 
     public String show()
@@ -58,6 +71,11 @@ public class Menu
         boolean exitFromLoop = false;
 
         System.out.println();
+        if (title != null && title.length() > 0)
+        {
+            System.out.println(title + "\n");
+        }
+
         items.forEach((item) ->
             System.out.printf("[%s] - %s\n\033[s",
                 item.getKey(),
@@ -86,6 +104,7 @@ public class Menu
         }
         while (!exitFromLoop);
 
+        System.out.println();
         return key;
     }
 }

@@ -46,16 +46,16 @@ public class AppContext
         this.panels = new HashMap<>();
 
         // Registra las instancias de los paneles en el HashMap
-        panels.put(Location.MainMenu, new MainMenuPanel());
-        panels.put(Location.LoginPanel, new LoginPanel());
-        panels.put(Location.StudentRegistrationPanel, new StudentRegistrationPanel());
-        panels.put(Location.PaymentRegistrationPanel, new PaymentRegistrationPanel());
-        panels.put(Location.SearchPanel, new SearchPanel());
-        panels.put(Location.StudentInformationPanel, new StudentInformationPanel());
-        panels.put(Location.GroupQueryPanel, new GroupQueryPanel());
-        panels.put(Location.PaymentQueryPanel, new PaymentQueryPanel());
-        panels.put(Location.ControlPanel, new ControlPanel());
-        panels.put(Location.LoginPanel, new LoginPanel());
+        panels.put(Location.MainMenu, new MainMenuPanel(this));
+        panels.put(Location.LoginPanel, new LoginPanel(this));
+        panels.put(Location.StudentRegistrationPanel, new StudentRegistrationPanel(this));
+        panels.put(Location.PaymentRegistrationPanel, new PaymentRegistrationPanel(this));
+        panels.put(Location.SearchPanel, new SearchPanel(this));
+        panels.put(Location.StudentInformationPanel, new StudentInformationPanel(this));
+        panels.put(Location.GroupQueryPanel, new GroupQueryPanel(this));
+        panels.put(Location.PaymentQueryPanel, new PaymentQueryPanel(this));
+        panels.put(Location.ControlPanel, new ControlPanel(this));
+        panels.put(Location.LoginPanel, new LoginPanel(this));
     }
 
     /**
@@ -83,18 +83,20 @@ public class AppContext
                 Location currentDestination;
                 Location previousDestination;
                 // Variables que contienen información transferida entre paneles
-                PanelTransition transition;
+                PanelTransitionArgs transition;
                 Object obj = null;
                 
+                // Borra el contenido de la pantalla
+                console.clearDisplay();
                 // Obtiene la instancia del panel de inicio de sesión
                 panel = panels.get(Location.LoginPanel);
                 // Muestra el panel de inicio de sesión
-                transition = panel.show(this, null);
+                transition = panel.show(null);
 
                 // Verifica si se indicó salir del programa o si no se ha
                 // realizado la conexión con la base de datos
                 if (transition == null || 
-                    transition.location == Location.Exit || 
+                    transition.newLocation == Location.Exit || 
                     !isConnected)
                 {
                     // Termina el bucle
@@ -111,6 +113,9 @@ public class AppContext
                 // programa
                 do
                 {
+                    // Borra el contenido de la pantalla
+                    console.clearDisplay();
+
                     previousDestination = currentDestination;
                     // Obtiene la instancia del panel dada por la  variable de
                     // próximo destino
@@ -120,11 +125,10 @@ public class AppContext
                     // Muestra el panel actual y espera a obtener un objeto de
                     // transición
                     transition = panel.show(
-                        this, 
-                        new PanelTransition(previousDestination, obj));
+                        new PanelTransitionArgs(previousDestination, obj));
 
                     // Verifica si el objeto de transición es nulo
-                    if (transition == null || transition.location == null)
+                    if (transition == null || transition.newLocation == null)
                     {
                         // Establece el menú principal como destino
                         nextDestination = Location.MainMenu;
@@ -132,7 +136,7 @@ public class AppContext
                     }
                     else
                     {
-                        nextDestination = transition.location;
+                        nextDestination = transition.newLocation;
                         obj = transition.obj;
                     }
 
@@ -182,9 +186,28 @@ public class AppContext
      * 
      * @param destination Destino
      */
-    public void goToAndReturn(Location destination)
+    public Object goToAndReturn(
+        Location newLocation, 
+        Location currentLocation,
+        Object obj)
     {
-        throw new UnsupportedOperationException("Unimplemented method");
+        if (newLocation == null || !panels.containsKey(newLocation))
+        {
+            return null;
+        }
+
+        var panel = panels.get(newLocation);
+        var result = panel.show(new PanelTransitionArgs(
+            newLocation, 
+            currentLocation, 
+            obj));
+
+        if (result == null)
+        {
+            return null;
+        }
+
+        return result.obj;
     }
 
     /**
@@ -238,6 +261,16 @@ public class AppContext
     }
 
     /**
+     * Crea un objeto para crear menús interactivos.
+     * 
+     * @return Objeto Menu
+     */
+    public Menu createMenu(String title)
+    {
+        return new Menu(scanner, title);
+    }
+    
+    /**
      * Realiza el inicio de sesión.
      * 
      * @param user Nombre de usuario
@@ -247,7 +280,7 @@ public class AppContext
      */
     public void login(String user, String password) throws SQLException, CommunicationsException
     {
-        //dbConnectionWrapper.create(user, password);
+        dbConnectionWrapper.create(user, password);
         isConnected = true;
     }
 }

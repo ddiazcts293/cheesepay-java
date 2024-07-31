@@ -13,3 +13,9 @@ Para que nuestro proyecto sea consistente se utilizarán las siguientes especifi
 - Agregar comentarios en declaraciones de variables, funciones y clases que describan a los mismos.
 
 ## Compilación
+
+## Notas
+
+- Evitar mostrar información repetida en los resultados de las consultas
+- Colocar la información que se repite fuera de tabla
+- Nombre y direcciones concatenadas

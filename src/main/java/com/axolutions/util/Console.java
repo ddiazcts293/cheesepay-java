@@ -9,11 +9,12 @@ public class Console
 {
     private Scanner scanner;
 
-    /**
-     * Crea un nuevo objeto Console
-     * 
-     * @param scanner Instancia de Scanner
-     */
+    public void clearDisplay()
+    {
+        // using flag 2; check another flags
+        System.out.printf("\033[%dJ\033[H", 2);
+    }
+
     public Console(Scanner scanner)
     {
         this.scanner = scanner;
@@ -30,14 +31,11 @@ public class Console
         return readString(prompt, 0, Integer.MAX_VALUE);
     }
 
-    /**
-     * Lee una cadena de caracteres que es ingresada por el usuario.
-     * 
-     * @param prompt Indicación que es mostrada al usuario
-     * @param minLength Longitud mínima
-     * @param maxLength Longitud máxima
-     * @return Cadena de caracteres
-     */
+    public String readString(String prompt, int minLength)
+    {
+        return readString(prompt, minLength, Integer.MAX_VALUE);
+    }
+
     public String readString(String prompt, int minLength, int maxLength)
     {
         String result;
@@ -98,14 +96,11 @@ public class Console
         return readInt(prompt, Integer.MIN_VALUE - 1, Integer.MAX_VALUE);
     }
 
-    /**
-     * Lee un valor entero que es ingresado por el usuario.
-     * 
-     * @param prompt Indicación que es mostrada al usuario
-     * @param min Límite inferior
-     * @param max Límite superior
-     * @return Número int
-     */
+    public int readInt(String prompt, int min)
+    {
+        return readInt(prompt, min, Integer.MAX_VALUE);
+    }
+
     public int readInt(String prompt, int min, int max)
     {
         int result = min - 1;
@@ -155,7 +150,7 @@ public class Console
         {
             try
             {
-                System.out.print(prompt + " :");
+                System.out.print(prompt + " : ");
                 result = scanner.nextFloat();
                 scanner.nextLine();
             }
@@ -177,8 +172,7 @@ public class Console
      */
     public LocalDate readDate(String prompt)
     {
-        // Expresión regular que verifica si una cade esta formateada como
-        // DD-MM-AAAA o AAAA-MM-DD
+        // Expresión que hace coincicir con el formato DD-MM-AAAA o AAAA-MM-DD
         String regex = "(\\d{2})[-/](\\d{1,2})[-/](\\d{4})|\\d{4}[-/](\\d{1,2})[-/](\\d{2})";
 
         do

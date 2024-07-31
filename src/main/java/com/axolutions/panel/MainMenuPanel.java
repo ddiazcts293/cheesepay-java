@@ -6,7 +6,7 @@ public class MainMenuPanel extends BasePanel
 {
     /**
      * Menú principal
-     * 
+     *
      * Agregar los siguientes apartados como opciones del menú:
      * - Registrar alumno
      * - Registrar pago
@@ -17,24 +17,27 @@ public class MainMenuPanel extends BasePanel
      * - Panel de control
      */
 
-    @Override
-    public PanelTransition show(AppContext appContext, PanelTransition args) 
+    public MainMenuPanel(AppContext appContext)
     {
-        System.out.println("Menú principal");
+        super(appContext);
+    }
 
+    @Override
+    public PanelTransitionArgs show(PanelTransitionArgs args)
+    {
         var menu = appContext.createMenu();
-        menu.AddItem("1", "Registrar alumno");
-        menu.AddItem("2", "Registrar pago");
-        menu.AddItem("3", "Buscar tutor o alumno");
-        menu.AddItem("4", "Ver información de alumno");
-        menu.AddItem("5", "Consultar grupos");
-        menu.AddItem("6", "Consultar cobros");
-        menu.AddItem("7", "Ir a panel de control");
-        menu.AddItem("8", "Cambiar de cuenta");
-        menu.AddItem("9", "Salir");
+        menu.setTitle("Bienvenido, ¿qué le gustaría hacer?");
+        menu.addItem("1", "Registrar a un alumno nuevo");
+        menu.addItem("2", "Registrar pago");
+        menu.addItem("3", "Buscar a tutores/alumnos");
+        menu.addItem("4", "Ver información de alumno");
+        menu.addItem("5", "Consultar grupos");
+        menu.addItem("6", "Consultar cobros");
+        menu.addItem("7", "Ir a panel de control");
+        menu.addItem("8", "Cambiar de cuenta");
+        menu.addItem("9", "Salir");
 
-        String option = menu.show();        
-        switch (option) 
+        switch (menu.show())
         {
             case "1":
                 return nextDestination(Location.StudentRegistrationPanel);
