@@ -14,6 +14,8 @@ Para que nuestro proyecto sea consistente se utilizarán las siguientes especifi
 
 ## Compilación
 
+Para poder compilar este proyecto es necesario instalar Maven. Les comparto **[este link](https://www.ingenieroinformatico.org/2017/12/instalar-y-configurar-apache-maven-en-windows/)** y **[este otro](https://phoenixnap.com/kb/install-maven-windows)** donde encontrarán las guías de cómo hacerlo.
+
 ## Notas
 
 - Evitar mostrar información repetida en los resultados de las consultas
