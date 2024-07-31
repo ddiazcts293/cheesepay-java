@@ -9,16 +9,35 @@ public class Console
 {
     private Scanner scanner;
 
+    /**
+     * Crea un nuevo objeto Console
+     * 
+     * @param scanner Instancia de Scanner
+     */
     public Console(Scanner scanner)
     {
         this.scanner = scanner;
     }
 
+    /**
+     * Lee una cadena de caracteres que es ingresada por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @return Cadena de caracteres
+     */
     public String readString(String prompt)
     {
         return readString(prompt, 0, Integer.MAX_VALUE);
     }
 
+    /**
+     * Lee una cadena de caracteres que es ingresada por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param minLength Longitud mínima
+     * @param maxLength Longitud máxima
+     * @return Cadena de caracteres
+     */
     public String readString(String prompt, int minLength, int maxLength)
     {
         String result;
@@ -33,11 +52,27 @@ public class Console
         return result;
     }
 
+    /**
+     * Lee una contraseña que es ingresada por el usuario sin mostrarla en
+     * pantalla.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @return Cadena de caracteres
+     */
     public String readPassword(String prompt)
     {
         return readPassword(prompt, 0, Integer.MAX_VALUE);
     }
 
+    /**
+     * Lee una contraseña que es ingresada por el usuario sin mostrarla en
+     * pantalla.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param minLength Longitud mínima
+     * @param maxLength Longitud máxima
+     * @return Cadena de caracteres
+     */
     public String readPassword(String prompt, int minLength, int maxLength)
     {
         char[] array;
@@ -52,11 +87,25 @@ public class Console
         return new String(array);
     }
 
+    /**
+     * Lee un valor entero que es ingresado por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @return Número int
+     */
     public int readInt(String prompt)
     {
         return readInt(prompt, Integer.MIN_VALUE - 1, Integer.MAX_VALUE);
     }
 
+    /**
+     * Lee un valor entero que es ingresado por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param min Límite inferior
+     * @param max Límite superior
+     * @return Número int
+     */
     public int readInt(String prompt, int min, int max)
     {
         int result = min - 1;
@@ -79,11 +128,25 @@ public class Console
         return result;
     }
 
+    /**
+     * Lee un valor de punto flotante que es ingresado por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @return Número float
+     */
     public float readFloat(String prompt)
     {
         return readFloat(prompt, Float.MIN_VALUE, Float.MAX_VALUE);
     }
 
+    /**
+     * Lee un valor de punto flotante que es ingresado por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param min Límite inferior
+     * @param max Límite superior
+     * @return Número float
+     */
     public float readFloat(String prompt, float min, float max)
     {
         float result = Float.NaN;
@@ -106,9 +169,16 @@ public class Console
         return result;
     }
 
+    /**
+     * Lee una fecha que es ingresada por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario.
+     * @return Fecha en objeto LocalDate
+     */
     public LocalDate readDate(String prompt)
     {
-        // Expresión que hace coincicir con el formato DD-MM-AAAA o AAAA-MM-DD
+        // Expresión regular que verifica si una cade esta formateada como
+        // DD-MM-AAAA o AAAA-MM-DD
         String regex = "(\\d{2})[-/](\\d{1,2})[-/](\\d{4})|\\d{4}[-/](\\d{1,2})[-/](\\d{2})";
 
         do

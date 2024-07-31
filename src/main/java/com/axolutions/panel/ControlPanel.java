@@ -1,6 +1,7 @@
 package com.axolutions.panel;
 
 import com.axolutions.AppContext;
+import com.axolutions.util.Menu;
 
 public class ControlPanel extends BasePanel
 {
@@ -32,6 +33,17 @@ public class ControlPanel extends BasePanel
     public PanelTransition show(AppContext appContext, PanelTransition args)
     {
         System.out.println("Panel de control");
+
+        Menu menu = appContext.createMenu();
+
+        menu
+            .AddItem("1", "Modificar lista de cobros")
+            .AddItem("2", "Registrar un nuevo ciclo escolar")
+            .AddItem("3", "Registrar un nuevo cobro")
+            .AddItem("4", "Gestionar empleados");
+
+        menu.show();
+
         return null;
     }
 }
