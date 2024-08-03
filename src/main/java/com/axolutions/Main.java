@@ -66,41 +66,4 @@ public class Main
 
         return host;
     }
-
-    private static void readLogo()
-    {
-        String filePath = "/home/danny/Descargas/ascii-art.txt";
-
-        // Bloque en el que se intenta abrir el archivo
-        try 
-        {
-            // Crea una objeto File indicando la ruta de un archivo, el cual
-            // debería encontrarse en la misma carpeta que el ejecutable
-            File file = new File(filePath);
-
-            // Verifica que el archivo exista, no sea un directorio y que se 
-            // pueda leer
-            if (!file.exists() || file.isDirectory() || !file.canRead())
-            {
-                // Lanza una excepción
-                throw new Exception();
-            }
-
-            // Crea un objeto Scanner para leer el archivo
-            Scanner reader = new Scanner(file);
-
-            while (reader.hasNextLine())
-            {
-                System.out.println(reader.nextLine());
-            }
-
-            reader.close();
-        }
-        catch (Exception e) 
-        {
-            // Establece una dirección preterminada en caso de producirse una
-            // excepción
-            filePath = "localhost";
-        }
-    }
 }
