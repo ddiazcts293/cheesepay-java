@@ -268,24 +268,6 @@ public class AppContext
     }
 
     /**
-     * Crea un objeto para crear menús interactivos.
-     * @return Objeto Menu
-     */
-    public Menu createMenu()
-    {
-        return new Menu(scanner);
-    }
-
-    /**
-     * Crea un objeto para crear menús interactivos.
-     * @return Objeto Menu
-     */
-    public Menu createMenu(String title)
-    {
-        return new Menu(scanner, title);
-    }
-
-    /**
      * Realiza el inicio de sesión.
      * @param user Nombre de usuario
      * @param password Contraseña

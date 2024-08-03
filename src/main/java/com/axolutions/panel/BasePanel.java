@@ -3,6 +3,7 @@ package com.axolutions.panel;
 import com.axolutions.AppContext;
 import com.axolutions.db.DbContext;
 import com.axolutions.util.Console;
+import com.axolutions.util.Menu;
 
 /**
  * Representa la base para los diferentes tipos de paneles.
@@ -89,5 +90,24 @@ public abstract class BasePanel
     {
         var args = new PanelTransitionArgs(requestedLocation, location, obj);
         return appContext.goTo(args);
+    }
+
+    /**
+     * Crea un menú de opciones.
+     * @return Objeto Menú
+     */
+    protected Menu createMenu()
+    {
+        return new Menu(appContext.getScanner());
+    }
+    
+    /**
+     * Crea un menú de opciones.
+     * @param title Título del menú
+     * @return Objeto menú
+     */
+    protected Menu createMenu(String title)
+    {
+        return new Menu(appContext.getScanner(), title);
     }
 }
