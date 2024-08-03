@@ -59,7 +59,7 @@ public class Console
         do
         {
             System.out.print(prompt + ": ");
-            result = scanner.nextLine();
+            result = scanner.nextLine().trim();
 
         } while (result.length() < minLength || result.length() > maxLength);
 
