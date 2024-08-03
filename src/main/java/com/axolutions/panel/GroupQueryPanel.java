@@ -45,7 +45,7 @@ public class GroupQueryPanel extends BasePanel
         EducationLevel selectedLevel = null;
         ScholarPeriod selectedPeriod = null;
         String option;
-        Menu menu = appContext.createMenu("Filtrado de grupos");
+        Menu menu = createMenu("Filtrado de grupos");
         menu.addItem("c", "Seleccionar ciclo escolar");
         menu.addItem("n", "Seleccionar nivel educativo");
         menu.addItem("v", "Volver al menú principal");
@@ -93,7 +93,7 @@ public class GroupQueryPanel extends BasePanel
             return null;
         }
 
-        Menu menu = appContext.createMenu("Niveles educativos");
+        Menu menu = createMenu("Niveles educativos");
         for (int i = 0; i < levels.length; i++) 
         {
             var level = levels[i];
@@ -130,7 +130,7 @@ public class GroupQueryPanel extends BasePanel
             return null;
         }
 
-        Menu menu = appContext.createMenu("Ciclos escolares");
+        Menu menu = createMenu("Ciclos escolares");
         for (int i = 0; i < periods.length; i++) 
         {
             var level = periods[i];
@@ -175,7 +175,7 @@ public class GroupQueryPanel extends BasePanel
             period.endingDate.getYear());
         
         System.out.println(text);
-        Menu menu = appContext.createMenu();
+        Menu menu = createMenu();
         menu.setTitle("Nivel\t\tGrupo\tPeriodo\tEstudiantes");
         
         for (int i = 0; i < groups.length; i++) 
@@ -197,7 +197,7 @@ public class GroupQueryPanel extends BasePanel
 
         do 
         {
-            String option = menu.show("Seleccione un grupo", false);
+            String option = menu.show("Seleccione un grupo");
             if (option.equalsIgnoreCase("v"))
             {
                 return;

@@ -32,7 +32,7 @@ public class ControlPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        Menu menu = appContext.createMenu("Panel de control");
+        Menu menu = createMenu("Panel de control");
         menu.addItem("1", "Registrar un nuevo ciclo escolar");
         menu.addItem("2", "Registrar un nuevo evento especial");
         menu.addItem("3", "Regresar");

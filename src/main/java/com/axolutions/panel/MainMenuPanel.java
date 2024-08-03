@@ -29,18 +29,19 @@ public class MainMenuPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        var menu = appContext.createMenu();
-        menu.setTitle("Bienvenido, ¿qué le gustaría hacer?");
-        menu.addItem("1", "Registrar a un nuevo alumno");
-        menu.addItem("2", "Ver información de alumno");
-        menu.addItem("3", "Buscar a un alumno");
-        menu.addItem("4", "Consultar grupos");
-        menu.addItem("5", "Consultar costos de cobros");
-        menu.addItem("6", "Ir a panel de control");
-        menu.addItem("7", "Cambiar de cuenta");
-        menu.addItem("8", "Salir");
+        String option = createMenu()
+            .setTitle("Bienvenido, ¿qué le gustaría hacer?\n")
+            .addItem("1", "Registrar a un nuevo alumno")
+            .addItem("2", "Ver información de alumno")
+            .addItem("3", "Buscar a un alumno")
+            .addItem("4", "Consultar grupos")
+            .addItem("5", "Consultar costos de cobros")
+            .addItem("6", "Ir a panel de control")
+            .addItem("7", "Cambiar de cuenta")
+            .addItem("8", "Salir")
+            .show();
 
-        switch (menu.show())
+        switch (option)
         {
             case "1":
                 return setLocation(Location.StudentRegistrationPanel);
@@ -57,6 +58,7 @@ public class MainMenuPanel extends BasePanel
             case "7":
                 return setLocation(Location.LoginPanel);
             default:
+                System.out.println("¡Gracias por utilizar CheesePay!");
                 return setLocation(Location.Exit);
         }
     }

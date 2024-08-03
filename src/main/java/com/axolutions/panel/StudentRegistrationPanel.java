@@ -62,8 +62,8 @@ public class StudentRegistrationPanel extends BasePanel
 
         // Crea un nuevo menú y le añade algunas opciones
         String option;
-        Menu menu = appContext.createMenu();
-        menu.setTitle("¿El tutor del alumno está registrado?");
+        Menu menu = createMenu();
+        menu.setTitle("¿El tutor del alumno está registrado?\n");
         menu.addItem("s", "Si");
         menu.addItem("n", "No");
         
@@ -106,7 +106,7 @@ public class StudentRegistrationPanel extends BasePanel
             // Borra la lista de elementos en el menú anteriormente creado y 
             // añade algunas opciones
             menu.clearItems();
-            menu.setTitle("¿Desea registrar a otro alumno?");
+            menu.setTitle("¿Desea registrar a otro alumno?\n");
             menu.addItem("s", "Si");
             menu.addItem("n", "No");
 
@@ -149,8 +149,8 @@ public class StudentRegistrationPanel extends BasePanel
         
         // Crea un nuevo menú y le agrega algunas opciones
         String option;
-        Menu menu = appContext.createMenu();
-        menu.setTitle("¿Desea confirmar el registro?");
+        Menu menu = createMenu();
+        menu.setTitle("\n¿Desea confirmar el registro?\n");
         menu.addItem("r", "Sí, registrar");
         menu.addItem("v", "No, volver a ingresar datos");
         menu.addItem("c", "No, cancelar");
@@ -199,12 +199,10 @@ public class StudentRegistrationPanel extends BasePanel
                 }
                 catch (Exception e)
                 {
-                    // Avisa al usuario de que hubo un error
-                    System.out.println("Error al guardar los cambios");
-
                     // Crea y muestra un submenú para preguntar si desea volver
                     // a ingresar los datos o si desea cancelar el registro
-                    option = appContext.createMenu()
+                    option = createMenu()
+                        .setTitle("Error al guardar los cambios\n")
                         .addItem("v", "Volver a ingresar datos")
                         .addItem("c", "Cancelar")
                         .show();
@@ -235,8 +233,8 @@ public class StudentRegistrationPanel extends BasePanel
         String option;
 
         // Crea un nuevo menú y le agrega algunas opciones
-        Menu menu = appContext.createMenu();
-        menu.setTitle("¿Desea confirmar el registro?");
+        Menu menu = createMenu();
+        menu.setTitle("\n¿Desea confirmar el registro?\n");
         menu.addItem("r", "Sí, Registrar");
         menu.addItem("v", "No, volver a ingresar datos");
         menu.addItem("c", "No, cancelar");
@@ -304,11 +302,11 @@ public class StudentRegistrationPanel extends BasePanel
                 catch (Exception e)
                 {
                     // Avisa al usuario de que hubo un error
-                    System.out.println("Error al guardar los cambios");
-
+                    
                     // Crea y muestra un submenú para preguntar si desea volver
                     // a ingresar los datos o si desea cancelar el registro
-                    option = appContext.createMenu()
+                    option = createMenu()
+                        .setTitle("Error al guardar los cambios\n")
                         .addItem("v", "Volver a ingresar datos")
                         .addItem("c", "Cancelar")
                         .show();

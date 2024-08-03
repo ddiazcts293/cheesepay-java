@@ -55,7 +55,7 @@ public class PaymentRegistrationPanel extends BasePanel
             return null;
         }
 
-        Menu menu = appContext.createMenu("Ciclos escolares");
+        Menu menu = createMenu("Ciclos escolares");
         for (int i = 0; i < periods.length; i++) 
         {
             var level = periods[i];
@@ -89,7 +89,7 @@ public class PaymentRegistrationPanel extends BasePanel
 
     private void showPaymentsForPeriod(ScholarPeriod period)
     {
-        Menu menu = appContext.createMenu();
+        Menu menu = createMenu();
         menu.addItem("i", "Inscripciones");
     }
 }
