@@ -12,4 +12,17 @@ public class Tutor
     public String email;
 
     public ArrayList<TutorPhone> phones = new ArrayList<>();
+
+    @Override
+    public String toString() 
+    {
+        return String.format(
+            "%s|%s %s %s|%s", 
+            kinship,
+            name,
+            firstSurname,
+            lastSurname,
+            email,
+            rfc);
+    }
 }

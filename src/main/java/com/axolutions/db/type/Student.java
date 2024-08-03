@@ -20,4 +20,17 @@ public class Student
 
     public ScholarPeriod period;
     public EducationLevel level;
+    
+    @Override
+    public String toString() 
+    {
+        return String.format(
+            "%s|%s %s %s|%s|%s",
+            enrollment,
+            name,
+            firstSurname,
+            lastSurname,
+            gender,
+            curp);
+    }
 }
