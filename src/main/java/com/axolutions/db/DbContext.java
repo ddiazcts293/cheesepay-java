@@ -24,11 +24,11 @@ public class DbContext
     public Student getStudent(String enrollment) throws SQLException
     {
         Student studentFound = null;
-        String sqlQuery = "SELECT * FROM alumnos WHERE " +
-            "matricula = '" + enrollment + "'";
+        String sqlQuery = "SELECT * FROM alumnos WHERE matricula = ?";
 
-        var statement = getConnection().createStatement();
-        var resultSet = statement.executeQuery(sqlQuery);
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, enrollment);
+        var resultSet = statement.executeQuery();
 
         if (resultSet.next())
         {
@@ -66,10 +66,11 @@ public class DbContext
             "FROM tutores AS t " +
             "INNER JOIN tutores_alumnos AS ta ON ta.tutor = t.numero " +
             "INNER JOIN alumnos AS a ON ta.alumno = a.matricula " +
-            "WHERE a.matricula = '" + studentEnrollment +"'";
+            "WHERE a.matricula = ?";
 
-        var statement = getConnection().createStatement();
-        var resultSet = statement.executeQuery(sqlQuery);
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentEnrollment);
+        var resultSet = statement.executeQuery();
 
         while (resultSet.next())
         {
@@ -113,10 +114,11 @@ public class DbContext
             "INNER JOIN grupos_alumnos AS ga ON g.numero = ga.grupo " +
             "INNER JOIN alumnos AS a ON ga.alumno = a.matricula " +
             "INNER JOIN niveles_educativos AS ne ON g.nivel = ne.codigo " +
-            "WHERE a.matricula = " + enrollment;
+            "WHERE a.matricula = ?";
 
-        var statement = getConnection().createStatement();
-        var resultSet = statement.executeQuery(sqlQuery);
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, enrollment);
+        var resultSet = statement.executeQuery();
 
         while (resultSet.next())
         {
@@ -124,13 +126,9 @@ public class DbContext
             groupFound.number = resultSet.getInt(1);
             groupFound.grade = resultSet.getInt(2);
             groupFound.letter = resultSet.getString(3);
-
-            groupFound.period = new ScholarPeriod();
             groupFound.period.code = resultSet.getString(4);
             groupFound.period.startingDate = resultSet.getDate(5).toLocalDate();
             groupFound.period.endingDate = resultSet.getDate(6).toLocalDate();
-
-            groupFound.level = new EducationLevel();
             groupFound.level.code = resultSet.getString(7);
             groupFound.level.description = resultSet.getString(8);
 
@@ -150,10 +148,11 @@ public class DbContext
             "tt.numeroTelefono AS numeroTelefono " +
             "FROM tutores AS t " +
             "INNER JOIN tutor_telefonos AS tt ON tt.tutor = t.numero " +
-            "WHERE t.numero = " + tutorNumber;
+            "WHERE t.numero = ?";
 
-        var statement = getConnection().createStatement();
-        var resultSet = statement.executeQuery(sqlQuery);
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setInt(1, tutorNumber);
+        var resultSet = statement.executeQuery();
 
         while (resultSet.next())
         {
@@ -183,10 +182,11 @@ public class DbContext
             "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
             "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
             "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
-            "WHERE a.matricula = '" + enrollment +"' " +
+            "WHERE a.matricula = ? " +
             "GROUP BY p.folio ";
 
-        var statement = getConnection().createStatement();
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, enrollment);
         var resultSet = statement.executeQuery(sqlQuery);
 
         while (resultSet.next())
@@ -221,17 +221,20 @@ public class DbContext
             "t.correoElectronico AS correoElectronico, " +
             "t.rfc AS rfc " +
             "FROM tutores AS t " +
-            "INNER JOIN tutor_telefonos AS tt ON t.numero = tt.tutor " +
             "WHERE " +
-            "t.rfc LIKE '%" + data + "%' OR " +
-            "t.nombre LIKE '%" + data + "%' OR " +
-            "t.primerApellido LIKE '%" + data + "%' OR " +
-            "t.correoElectronico LIKE '%" + data + "%' OR " +
-            "tt.numeroTelefono LIKE '%" + data + "%' " +
-            "GROUP BY t.numero";
+            "t.rfc LIKE ? OR " +
+            "t.nombre LIKE ? OR " +
+            "t.primerApellido LIKE ? OR " +
+            "t.correoElectronico LIKE ? ";
 
-        var statement = getConnection().createStatement();
-        var resultSet = statement.executeQuery(sqlQuery);
+        data = "%" + data + "%";
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, data);
+        statement.setString(2, data);
+        statement.setString(3, data);
+        statement.setString(4, data);
+
+        var resultSet = statement.executeQuery();
 
         while (resultSet.next())
         {
@@ -263,12 +266,16 @@ public class DbContext
         ArrayList<Student> list = new ArrayList<>();
 
         String sqlQuery = "SELECT * FROM alumnos WHERE " +
-            "nombre LIKE '%" + data + "%' or " +
-            "primerApellido LIKE '%" + data + "%' or " +
-            "curp LIKE '%" + data + "%'";
+            "nombre LIKE ? or " +
+            "primerApellido LIKE ? or " +
+            "curp LIKE ?";
 
-        var statement = getConnection().createStatement();
-        var resultSet = statement.executeQuery(sqlQuery);
+        data = "%" + data + "%";
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, data);
+        statement.setString(2, data);
+        statement.setString(3, data);
+        var resultSet = statement.executeQuery();
 
         while (resultSet.next())
         {
@@ -346,13 +353,9 @@ public class DbContext
             group.number = resultSet.getInt(1);
             group.grade = resultSet.getInt(2);
             group.letter = resultSet.getString(3);
-
-            group.period = new ScholarPeriod();
             group.period.code = resultSet.getString(4);
             group.period.startingDate = resultSet.getDate(5).toLocalDate();
             group.period.endingDate = resultSet.getDate(6).toLocalDate();
-
-            group.level = new EducationLevel();
             group.level.code = resultSet.getString(7);
             group.level.description = resultSet.getString(8);
             group.studentCount = resultSet.getInt(9);
