@@ -23,16 +23,19 @@ public class LoginPanel extends BasePanel
      * contraseña sin mostrarla en pantalla.
      */
 
+    /**
+     * Crea un nuevo objeto LoginPanel.
+     * @param appContext Instancia del objeto AppContext
+     */
     public LoginPanel(AppContext appContext)
     {
-        super(appContext);
+        super(appContext, Location.LoginPanel);
     }
 
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        String user, password;
-
         System.out.println("Bienvenido a CheesePay v1.0");
+        String user, password;
         
         do {
             System.out.println();
@@ -52,7 +55,7 @@ public class LoginPanel extends BasePanel
                 System.out.println("error de conexión");
                 
                 // Terminar programa
-                return nextDestination(Location.Exit);
+                return setLocation(Location.Exit);
             }
             // Captura un error en las credenciales de acceso
             catch (SQLException e)
@@ -67,6 +70,6 @@ public class LoginPanel extends BasePanel
         System.out.println("ok");
         
         // Retorna al menú principal
-        return nextDestination(Location.MainMenu);
+        return setLocation(Location.MainMenu);
     }
 }

@@ -17,9 +17,13 @@ public class MainMenuPanel extends BasePanel
      * - Panel de control
      */
 
+    /**
+     * Crea un nuevo objeto MainMenuPanel.
+     * @param appContext Instancia del objeto AppContext
+     */
     public MainMenuPanel(AppContext appContext)
     {
-        super(appContext);
+        super(appContext, Location.MainMenu);
     }
 
     @Override
@@ -27,36 +31,33 @@ public class MainMenuPanel extends BasePanel
     {
         var menu = appContext.createMenu();
         menu.setTitle("Bienvenido, ¿qué le gustaría hacer?");
-        menu.addItem("1", "Registrar a un alumno nuevo");
-        menu.addItem("2", "Registrar pago");
-        menu.addItem("3", "Buscar a tutores/alumnos");
-        menu.addItem("4", "Ver información de alumno");
-        menu.addItem("5", "Consultar grupos");
-        menu.addItem("6", "Consultar cobros");
-        menu.addItem("7", "Ir a panel de control");
-        menu.addItem("8", "Cambiar de cuenta");
-        menu.addItem("9", "Salir");
+        menu.addItem("1", "Registrar a un nuevo alumno");
+        menu.addItem("2", "Ver información de alumno");
+        menu.addItem("3", "Buscar a un alumno");
+        menu.addItem("4", "Consultar grupos");
+        menu.addItem("5", "Consultar costos de cobros");
+        menu.addItem("6", "Ir a panel de control");
+        menu.addItem("7", "Cambiar de cuenta");
+        menu.addItem("8", "Salir");
 
         switch (menu.show())
         {
             case "1":
-                return nextDestination(Location.StudentRegistrationPanel);
+                return setLocation(Location.StudentRegistrationPanel);
             case "2":
-                return nextDestination(Location.PaymentRegistrationPanel);
+                return setLocation(Location.StudentInformationPanel);
             case "3":
-                return nextDestination(Location.SearchPanel);
+                return setLocation(Location.SearchPanel);
             case "4":
-                return nextDestination(Location.StudentInformationPanel);
+                return setLocation(Location.GroupQueryPanel);
             case "5":
-                return nextDestination(Location.GroupQueryPanel);
+                return setLocation(Location.PaymentQueryPanel);
             case "6":
-                return nextDestination(Location.PaymentQueryPanel);
+                return setLocation(Location.ControlPanel);
             case "7":
-                return nextDestination(Location.ControlPanel);
-            case "8":
-                return nextDestination(Location.LoginPanel);
+                return setLocation(Location.LoginPanel);
             default:
-                return nextDestination(Location.Exit);
+                return setLocation(Location.Exit);
         }
     }
 }

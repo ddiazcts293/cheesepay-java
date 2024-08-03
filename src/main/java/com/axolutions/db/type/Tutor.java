@@ -11,5 +11,5 @@ public class Tutor
     public String kinship; 
     public String email;
 
-    public ArrayList<String> phones = new ArrayList<>();
+    public ArrayList<TutorPhone> phones = new ArrayList<>();
 }

@@ -9,12 +9,11 @@ public class Console
 {
     private Scanner scanner;
 
-    public void clearDisplay()
-    {
-        // using flag 2; check another flags
-        System.out.printf("\033[%dJ\033[H", 2);
-    }
-
+    /**
+     * Crea un objeto de tipo Console
+     * 
+     * @param scanner
+     */
     public Console(Scanner scanner)
     {
         this.scanner = scanner;
@@ -31,11 +30,28 @@ public class Console
         return readString(prompt, 0, Integer.MAX_VALUE);
     }
 
-    public String readString(String prompt, int minLength)
+    /**
+     * Lee una cadena de caracteres de longitud fija que es ingresada por el
+     * usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param fixedLength Longitud fija
+     * @return Cadena de caracteres
+     */
+    public String readString(String prompt, int fixedLength)
     {
-        return readString(prompt, minLength, Integer.MAX_VALUE);
+        return readString(prompt, fixedLength, fixedLength);
     }
 
+    /**
+     * Lee una cadena de caracteres cuya longitud se encuentra dentro de un 
+     * rango definido.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param minLength Longitud mínima requerida 
+     * @param maxLength Longitud máxima requerida
+     * @return Cadena de caracteres
+     */
     public String readString(String prompt, int minLength, int maxLength)
     {
         String result;
@@ -89,18 +105,33 @@ public class Console
      * Lee un valor entero que es ingresado por el usuario.
      * 
      * @param prompt Indicación que es mostrada al usuario
-     * @return Número int
+     * @return Número entero
      */
     public int readInt(String prompt)
     {
         return readInt(prompt, Integer.MIN_VALUE - 1, Integer.MAX_VALUE);
     }
 
+    /**
+     * Lee un valor entero que es ingresado por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param min Valor mínimo
+     * @return Número entero
+     */
     public int readInt(String prompt, int min)
     {
         return readInt(prompt, min, Integer.MAX_VALUE);
     }
 
+    /**
+     * Lee un valor entero que es ingresado por el usuario
+     * 
+     * @param prompt Indicación que es mostrada al usuario
+     * @param min Límite inferior
+     * @param max Límite superior
+     * @return Número entero
+     */
     public int readInt(String prompt, int min, int max)
     {
         int result = min - 1;
@@ -172,6 +203,18 @@ public class Console
      */
     public LocalDate readDate(String prompt)
     {
+        return readDate(prompt, false);
+    }
+
+    /**
+     * Lee una fecha que es ingresada por el usuario.
+     * 
+     * @param prompt Indicación que es mostrada al usuario.
+     * @param canBeNull Indica si la fecha se puede dejar en null
+     * @return Fecha en objeto LocalDate o null
+     */
+    public LocalDate readDate(String prompt, boolean canBeNull)
+    {
         // Expresión que hace coincicir con el formato DD-MM-AAAA o AAAA-MM-DD
         String regex = "(\\d{2})[-/](\\d{1,2})[-/](\\d{4})|\\d{4}[-/](\\d{1,2})[-/](\\d{2})";
 
@@ -179,6 +222,11 @@ public class Console
         {
             System.out.print(prompt + " (YYYY-MM-DD): ");
             String enteredText = scanner.nextLine();
+
+            if (enteredText.isBlank() && canBeNull)
+            {
+                return null;
+            }
 
             Pattern pattern = Pattern.compile(regex);
             Matcher matcher = pattern.matcher(enteredText);
@@ -225,5 +273,17 @@ public class Console
         } while (true);
 
         //return LocalDate.now();
+    }
+
+    public void clearDisplay()
+    {
+        // using flag 2; implement another flags
+        System.out.printf("\033[%dJ\033[H", 2);
+    }
+
+    public void pause(String prompt)
+    {
+        System.out.println(prompt);
+        scanner.nextLine();
     }
 }

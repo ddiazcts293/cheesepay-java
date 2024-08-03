@@ -39,7 +39,7 @@ public class PaymentQueryPanel extends BasePanel
 
     public PaymentQueryPanel(AppContext appContext)
     {
-        super(appContext);
+        super(appContext, Location.ControlPanel);
     }
 
     @Override

@@ -8,4 +8,6 @@ public class Group
 
     public ScholarPeriod period;
     public EducationLevel level;
+
+    public int studentCount;
 }

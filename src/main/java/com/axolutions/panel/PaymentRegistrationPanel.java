@@ -1,6 +1,8 @@
 package com.axolutions.panel;
 
 import com.axolutions.AppContext;
+import com.axolutions.db.type.ScholarPeriod;
+import com.axolutions.util.Menu;
 
 public class PaymentRegistrationPanel extends BasePanel
 {
@@ -30,7 +32,7 @@ public class PaymentRegistrationPanel extends BasePanel
 
     public PaymentRegistrationPanel(AppContext appContext)
     {
-        super(appContext);
+        super(appContext, Location.StudentRegistrationPanel);
     }
 
     @Override
@@ -38,7 +40,56 @@ public class PaymentRegistrationPanel extends BasePanel
     {
         System.out.println("Panel de registro de pagos");
 
+        ScholarPeriod selection = null;
+        ScholarPeriod[] periods;
+        String option;
+
+        try 
+        {
+            periods = dbContext.getScholarPeriods();
+        }
+        catch (Exception e) 
+        {
+            System.out.println("Error al obtener los datos de ciclos " +
+                "escolares");
+            return null;
+        }
+
+        Menu menu = appContext.createMenu("Ciclos escolares");
+        for (int i = 0; i < periods.length; i++) 
+        {
+            var level = periods[i];
+            String description = String.format("%d-%d", 
+                level.startingDate.getYear(),
+                level.endingDate.getYear());
+
+            menu.addItem(Integer.toString(i), description);
+        }
+
+        menu.addBlankLine();
+        menu.addItem("v", "Volver al menú principal");
+
+        do
+        {
+            option = menu.show("Seleccione una opción");
+            if (option.equalsIgnoreCase("v"))
+            {
+                break;
+            }
+            
+            int index = Integer.parseInt(option);
+            selection = periods[index];
+
+            showPaymentsForPeriod(selection);
+        }
+        while (true);
+
         return null;
     }
 
+    private void showPaymentsForPeriod(ScholarPeriod period)
+    {
+        Menu menu = appContext.createMenu();
+        menu.addItem("i", "Inscripciones");
+    }
 }

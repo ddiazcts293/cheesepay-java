@@ -1,15 +1,14 @@
 package com.axolutions;
 
 import java.util.Scanner;
-import java.sql.SQLException;
 import java.util.HashMap;
+import java.sql.SQLException;
 import com.axolutions.db.*;
 import com.axolutions.panel.*;
-import com.axolutions.util.Console;
-import com.axolutions.util.Menu;
+import com.axolutions.util.*;
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
-public class AppContext 
+public class AppContext
 {
     private boolean isRunning;
     private boolean isConnected;
@@ -31,13 +30,12 @@ public class AppContext
 
     /**
      * Constructor principal.
-     * 
      * @param scanner Instancia de Scanner que lee la entrada de usuario.
      * @param dbConnectionString Cadena de conexión con la base de datos.
      */
     public AppContext(Scanner scanner, String dbConnectionString)
     {
-        // Inicialización de variables
+        // Inicialización de atributos
         this.isRunning = false;
         this.scanner = scanner;
         this.console = new Console(scanner);
@@ -45,174 +43,196 @@ public class AppContext
         this.dbContext = new DbContext(dbConnectionWrapper);
         this.panels = new HashMap<>();
 
+        // Crea un arreglo con las instancias de los paneles existentes
+        BasePanel[] panelInstances = new BasePanel[]
+        {
+            new MainMenuPanel(this),
+            new LoginPanel(this),
+            new StudentRegistrationPanel(this),
+            new SearchPanel(this),
+            new StudentInformationPanel(this),
+            new GroupQueryPanel(this),
+            new PaymentQueryPanel(this),
+            new ControlPanel(this),
+        };
+
         // Registra las instancias de los paneles en el HashMap
-        panels.put(Location.MainMenu, new MainMenuPanel(this));
-        panels.put(Location.LoginPanel, new LoginPanel(this));
-        panels.put(Location.StudentRegistrationPanel, new StudentRegistrationPanel(this));
-        panels.put(Location.PaymentRegistrationPanel, new PaymentRegistrationPanel(this));
-        panels.put(Location.SearchPanel, new SearchPanel(this));
-        panels.put(Location.StudentInformationPanel, new StudentInformationPanel(this));
-        panels.put(Location.GroupQueryPanel, new GroupQueryPanel(this));
-        panels.put(Location.PaymentQueryPanel, new PaymentQueryPanel(this));
-        panels.put(Location.ControlPanel, new ControlPanel(this));
-        panels.put(Location.LoginPanel, new LoginPanel(this));
+        for (BasePanel panel : panelInstances)
+        {
+            panels.put(panel.getLocation(), panel);
+        }
     }
 
     /**
-     * Ejecuta un bucle que se encarga de controlar la navegación entre las 
+     * Ejecuta un bucle que se encarga de controlar la navegación entre las
      * diferentes secciones del programa.
      */
     public void run()
     {
-        // Verifica que el bucle no se encuentre en ejecución
-        if (!isRunning)
+        // Verifica si el bucle se encuentra en ejecución
+        if (isRunning)
         {
-            // Indica que el programa ya se encuentra en ejecución
-            isRunning = true;
-            // Variable que indica si se debe volver a iniciar sesión
-            boolean loginAgain = true;
+            // De ser así, sale de la función
+            return;
+        }
 
-            // Bucle que se ejecutará mientras no se solicite salir del programa
-            // Va a repetir el ciclo de inicio de sesión una y otra vez
-            do 
+        // Establece que el bucle ya se encuentra en ejecución
+        isRunning = true;
+        // Variable que indica si se debe volver a iniciar sesión
+        boolean loginAgain = true;
+
+        // Bucle que se ejecutará mientras no se solicite salir del programa
+        // Repite indefinidamente el ciclo de inicio de sesión
+        do
+        {
+            // Variable que almacenará la instancia del panel a mostrar
+            BasePanel panel;
+            // Variables para controlar la ubicaciones de desplazamiento entre
+            // los diferentes paneles
+            Location requestedLocation;
+            //Location currentLocation;
+            Location lastLocation;
+            // Variables que contienen información transferida entre paneles
+            PanelTransitionArgs transition;
+            Object obj = null;
+
+            // Borra el contenido de la pantalla
+            console.clearDisplay();
+            // Obtiene la instancia del panel de inicio de sesión
+            panel = panels.get(Location.LoginPanel);
+            // Muestra el panel de inicio de sesión
+            transition = panel.show(null);
+
+            // Verifica si se indicó salir del programa o si la conexión con la
+            // base de datos no fue establecida
+            if (transition == null ||
+                transition.getRequestedLocation() == Location.Exit ||
+                !isConnected)
             {
-                // Variable que almacenará el panel a mostrar
-                BasePanel panel;
-                // Variables para controlar el desplazamiento entre paneles
-                Location nextDestination;
-                Location currentDestination;
-                Location previousDestination;
-                // Variables que contienen información transferida entre paneles
-                PanelTransitionArgs transition;
-                Object obj = null;
-                
-                // Borra el contenido de la pantalla
-                console.clearDisplay();
-                // Obtiene la instancia del panel de inicio de sesión
-                panel = panels.get(Location.LoginPanel);
-                // Muestra el panel de inicio de sesión
-                transition = panel.show(null);
+                // Termina el bucle
+                break;
+            }
 
-                // Verifica si se indicó salir del programa o si no se ha
-                // realizado la conexión con la base de datos
-                if (transition == null || 
-                    transition.newLocation == Location.Exit || 
-                    !isConnected)
+            // Establece el destino actual como el menú principal
+            //currentLocation = Location.MainMenu;
+            // Establece el próximo destino también como el menú principal
+            requestedLocation = Location.MainMenu;
+
+            // Bucle que se ejecutará indefinidamente para realizar la
+            // navegación entre paneles mientras no se solicite salir del
+            // programa
+            do
+            {
+                // Borra todo el contenido de la pantalla
+                console.clearDisplay();
+
+                // Establece como destino anterior el destino que era actual en
+                // la iteración previa
+                lastLocation = panel.getLocation();
+                // Obtiene la instancia del panel dada por la variable de
+                // próximo destino
+                panel = panels.get(requestedLocation);
+                // Establece el destino actual
+                //currentLocation = requestedLocation;
+                // Muestra el panel actual y espera a obtener un objeto de
+                // transición
+                transition = panel.show(
+                    new PanelTransitionArgs(
+                        panel.getLocation(),
+                        lastLocation,
+                        obj));
+
+                // Verifica si tanto el objeto de transición como el nuevo
+                // destino son nulos
+                if (transition == null ||
+                    transition.getRequestedLocation() == null)
                 {
-                    // Termina el bucle
-                    break;
+                    // Establece el menú principal como destino
+                    requestedLocation = Location.MainMenu;
+                    obj = null;
+                }
+                // De lo contrario
+                else
+                {
+                    // Obtiene el nuevo destino
+                    requestedLocation = transition.getRequestedLocation();
+                    obj = transition.getObj();
                 }
 
-                // Establece el destino actual como el menú principal
-                currentDestination = Location.MainMenu; 
-                // Establece el próximo destino también como el menú principal
-                nextDestination = currentDestination;
-                
-                // Bucle que se ejecutará infinitamente hasta que se indique que
-                // se debe salir de la sesión para cambiar de cuenta o salir del
-                // programa
-                do
+                // Verifica si se indicó salir de programa
+                if (requestedLocation == Location.Exit)
                 {
-                    // Borra el contenido de la pantalla
-                    console.clearDisplay();
-
-                    previousDestination = currentDestination;
-                    // Obtiene la instancia del panel dada por la  variable de
-                    // próximo destino
-                    panel = panels.get(nextDestination);
-                    // Establece el destino actual
-                    currentDestination = nextDestination;
-                    // Muestra el panel actual y espera a obtener un objeto de
-                    // transición
-                    transition = panel.show(
-                        new PanelTransitionArgs(previousDestination, obj));
-
-                    // Verifica si el objeto de transición es nulo
-                    if (transition == null || transition.newLocation == null)
+                    // Establece que no se deberá volver a iniciar sesión
+                    loginAgain = false;
+                    // Finaliza el bucle
+                    break;
+                }
+                // Verifica si se indicó cambiar de cuenta
+                else if (requestedLocation == Location.LoginPanel)
+                {
+                    // Verifica si el panel mostrado era el menú principal
+                    if (panel.getLocation() == Location.MainMenu)
                     {
-                        // Establece el menú principal como destino
-                        nextDestination = Location.MainMenu;
-                        obj = null;
-                    }
-                    else
-                    {
-                        nextDestination = transition.newLocation;
-                        obj = transition.obj;
-                    }
-
-                    // Verifica si se indicó salir de programa
-                    if (nextDestination == Location.Exit)
-                    {
-                        // Establece que no se deberá volver a iniciar sesión
-                        loginAgain = false;
+                        // Cierra la conexión con la base de datos
+                        dbConnectionWrapper.close();
                         break;
                     }
-                    // Verifica si se indicó salir de la sesión sesión
-                    else if (nextDestination == Location.LoginPanel)
+                    // Si no lo es, lo dirige al menú principal
+                    else
                     {
-                        // Verifica si el panel anterior era el menú principal
-                        if (currentDestination == Location.MainMenu)
-                        {
-                            // Cierra la conexión con la base de datos
-                            dbConnectionWrapper.close();
-                            break;
-                        }
-                        // Si no lo es, lo dirige al menú principal
-                        else
-                        {
-                            nextDestination = Location.MainMenu;
-                        }
+                        requestedLocation = Location.MainMenu;
                     }
-                    // Verifica si se indicó regresar al panel anterior
-                    else if (nextDestination == Location.Previous)
-                    {
-                        nextDestination = previousDestination;
-                    }
-                    else if (!panels.containsKey(nextDestination))
-                    {
-                        nextDestination = Location.MainMenu;
-                    }
-                } while (true);
-                
-            } while (loginAgain);
+                }
+                // Verifica si se indicó regresar al panel anterior
+                else if (requestedLocation == Location.Previous)
+                {
+                    requestedLocation = lastLocation;
+                }
+                else if (!panels.containsKey(requestedLocation))
+                {
+                    requestedLocation = Location.MainMenu;
+                }
+            } while (true);
 
-            // Cierra la conexión con la base de datos
-            dbConnectionWrapper.close();
-        }
+        } while (loginAgain);
+
+        // Cierra la conexión con la base de datos
+        dbConnectionWrapper.close();
     }
 
     /**
-     * Muestra un panel y regresa luego de terminar.
-     * 
-     * @param destination Destino
+     * Muestra un panel solicitado.
+     * @param args Argumento que es transferido a la ubicación solicitada
+     * @return Objeto devuelto desde la ubicación solicitada
      */
-    public Object goToAndReturn(
-        Location newLocation, 
-        Location currentLocation,
-        Object obj)
+    public Object goTo(PanelTransitionArgs args)
     {
-        if (newLocation == null || !panels.containsKey(newLocation))
+        // Verifica si el argumento es nulo o la ubicación no está registrada
+        // en el mapa de paneles
+        if (args == null || !panels.containsKey(args.getRequestedLocation()))
         {
+            // Retorna null de ser así
             return null;
         }
 
-        var panel = panels.get(newLocation);
-        var result = panel.show(new PanelTransitionArgs(
-            newLocation, 
-            currentLocation, 
-            obj));
+        // Obtiene la instancia del panel solicitado
+        var panel = panels.get(args.getRequestedLocation());
+        // Muestra el panel y espera a que este devuelva un objeto
+        var result = panel.show(args);
 
+        // Verifica si el resultado devuelto es nulo
         if (result == null)
         {
+            // De ser así, retorna nulo
             return null;
         }
 
-        return result.obj;
+        // Retorna el objeto devuelto desde el panel solicitado
+        return result.getObj();
     }
 
     /**
      * Obtiene la instancia compartida de Scanner
-     * 
      * @return Objeto Scanner
      */
     public Scanner getScanner()
@@ -222,27 +242,24 @@ public class AppContext
 
     /**
      * Obtiene la instancia compartida de DbContext.
-     * 
      * @return Objeto DbContext
      */
-    public DbContext getDbContext() 
+    public DbContext getDbContext()
     {
         return dbContext;
     }
 
     /**
      * Obtiene la instancia compartida de Console.
-     * 
      * @return Objeto Console
      */
-    public Console getConsole() 
+    public Console getConsole()
     {
         return console;
     }
 
     /**
      * Devuelve un valor que indica si se ha conectado con la base de datos.
-     * 
      * @return TRUE si es así, de lo contrario FALSE
      */
     public boolean isConnected()
@@ -252,7 +269,6 @@ public class AppContext
 
     /**
      * Crea un objeto para crear menús interactivos.
-     * 
      * @return Objeto Menu
      */
     public Menu createMenu()
@@ -262,17 +278,15 @@ public class AppContext
 
     /**
      * Crea un objeto para crear menús interactivos.
-     * 
      * @return Objeto Menu
      */
     public Menu createMenu(String title)
     {
         return new Menu(scanner, title);
     }
-    
+
     /**
      * Realiza el inicio de sesión.
-     * 
      * @param user Nombre de usuario
      * @param password Contraseña
      * @throws SQLException Error de acceso

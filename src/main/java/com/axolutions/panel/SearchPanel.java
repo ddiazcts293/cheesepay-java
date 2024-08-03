@@ -13,12 +13,10 @@ public class SearchPanel extends BasePanel
      * En este panel se podrá realizar la busqueda de tutores y alumnos
      * 
      * Algortimo:
-     * - Buscar a un tutor
      * - Buscar a un alumno
      *
      * Para ambos casos:
      * 1. Inicio
-     * 2. Preguntar que desea buscar (tutor o alumno)
      * 3. Solicitar un dato (se puede preguntar a partir de una lista de campos
      *    o simplemente solicitarlo y buscar coincidencias en todos los campos)
      * 4. Realizar la consulta
@@ -31,28 +29,28 @@ public class SearchPanel extends BasePanel
 
     public SearchPanel(AppContext appContext)
     {
-        super(appContext);
+        super(appContext, Location.SearchPanel);
     }
 
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args) 
     {
         // Verifica si el panel es llamado desde otro panel
-        if (args.obj instanceof SearchType)
+        if (args.getObj() instanceof SearchType)
         {
-            SearchType searchType = (SearchType)args.obj;
+            SearchType searchType = (SearchType)args.getObj();
             
             switch (searchType) 
             {
                 case Student:
                 {
                     var student = searchStudent();
-                    return nextDestination(Location.Previous, student);
+                    return setLocation(Location.Previous, student);
                 }
                 case Tutor:
                 {
                     var tutor = searchTutor();
-                    return nextDestination(Location.Previous, tutor);
+                    return setLocation(Location.Previous, tutor);
                 }
                 default:
                     break;
@@ -61,20 +59,14 @@ public class SearchPanel extends BasePanel
         // De lo contrario, muestra el menú de búsqueda
         else
         {   
-            Menu menu = appContext.createMenu("Panel de búsqueda");
-            menu.addItem("1", "Alumno");
-            menu.addItem("2", "Tutor");
+            System.out.println("Panel de búsqueda");
 
-            switch (menu.show("¿Qué ")) 
+            var student = searchStudent();
+            if (student != null)
             {
-                case "1":
-                    searchStudent();
-                    break;
-                case "2":
-                    searchTutor();
-                    break;
-                default:
-                    break;
+                return setLocation(
+                    Location.StudentInformationPanel, 
+                    student);
             }
         }
 
@@ -84,27 +76,48 @@ public class SearchPanel extends BasePanel
     private Student searchStudent()
     {
         Student student = null;
-
-        System.out.println("Buscar a un alumno");
-        System.out.println("Puede buscar por medio de un nombre/apellido/CURP");
-        String text = console.readString("Dato", 3);
-
-        try 
+        
+        do
         {
-            var list = dbContext.searchStudents(text);
-            if (list.length == 0)
+            System.out.println("Buscar a un alumno\n");
+            System.out.println("Puede ingresar un término que corresponda " +
+                "a un nombre, apellido o CURP");
+            String text = console.readString("Texto");
+    
+            if (text.length() != 0)
             {
-                System.out.println("La busqueda no arrojo resultados");
-            }
-            else
-            {
-                student = selectStudent(list);
+                try 
+                {
+                    var list = dbContext.searchForStudents(text);
+                    if (list.length == 0)
+                    {
+                        System.out.println("La busqueda no arrojo resultados");
+                    }
+                    else
+                    {
+                        student = selectStudent(list);
+                    }    
+                } 
+                catch (Exception e) 
+                {
+                    System.out.println(
+                        "Error al intentar buscar en la base de datos");
+                }
             }
 
-        } catch (Exception e) 
-        {
-            System.out.println("Error: " + e.getMessage());
-        }
+            if (student == null)
+            {
+                Menu menu = appContext.createMenu();
+                menu.setTitle("¿Desea continuar buscando?");
+                menu.addItem("s", "Si");
+                menu.addItem("n", "No");
+
+                if (menu.show().equalsIgnoreCase("n"))
+                {
+                    break;
+                }
+            }
+        } while (student == null);
 
         return student;
     }
@@ -113,40 +126,62 @@ public class SearchPanel extends BasePanel
     {
         Tutor tutor = null;
 
-        System.out.println("Buscar a un tutor");
-        System.out.println("Puede buscar por medio de un nombre/apellido/RFC/correo electrónico/telefono");
-        String text = console.readString("Dato", 3);
-
-        try 
+        do
         {
-            var list = dbContext.searchTutors(text);
-            if (list.length == 0)
+            System.out.println("Buscar a un tutor\n");
+            System.out.println("Puede ingresar un término que corresponda " +
+                "a un nombre, apellido, RFC, correo electrónico, o telefono");
+            String text = console.readString("Texto");
+
+            if (text.length() != 0)
             {
-                System.out.println("La busqueda no arrojo resultados");
-            }
-            else
-            {
-                tutor = selectTutor(list);
+                try 
+                {
+                    var list = dbContext.searchForTutors(text);
+                    if (list.length == 0)
+                    {
+                        System.out.println("La busqueda no arrojo resultados");
+                    }
+                    else
+                    {
+                        tutor = selectTutor(list);
+                    }
+
+                } 
+                catch (Exception e) 
+                {
+                    System.out.println(
+                        "Error al intentar buscar en la base de datos");
+                }
             }
 
-        } catch (Exception e) 
-        {
-            System.out.println("Error: " + e.getMessage());
-        }
+            if (tutor == null)
+            {
+                Menu menu = appContext.createMenu();
+                menu.setTitle("¿Desea continuar buscando?");
+                menu.addItem("s", "Si");
+                menu.addItem("n", "No");
+
+                if (menu.show().equalsIgnoreCase("n"))
+                {
+                    break;
+                }
+            }
+        } while (tutor == null);
 
         return tutor;
     }
     
     private Student selectStudent(Student[] students)
     {
-        Menu menu = appContext.createMenu("Lista de alumnos");
+        Menu menu = appContext.createMenu();
         int count = 0;
 
         for (Student student : students) 
         {
             String option = Integer.toString(count++);
             String displayText = String.format(
-                "%s - %s %s %s - %s", 
+                "%s\t%s %s %s\t%s", 
                 student.enrollment,
                 student.name,
                 student.firstSurname,
@@ -156,8 +191,17 @@ public class SearchPanel extends BasePanel
             menu.addItem(option, displayText);
         }
 
-        System.out.println("Matricula - Nombre completo - CURP");
+        menu.addBlankLine();
+        menu.addItem("v", "Volver al menú anterior");
+
+        System.out.println("Alumnos encontrados\n");
+        System.out.println("[#]\tMatricula\tNombre completo\tCURP");
         String option = menu.show("Escoja una elemento");
+
+        if (option.equalsIgnoreCase("v"))
+        {
+            return null;
+        }
 
         int index = Integer.parseInt(option);
         return students[index];
@@ -172,7 +216,7 @@ public class SearchPanel extends BasePanel
         {
             String option = Integer.toString(count++);
             String displayText = String.format(
-                "%s %s %s - %s - %s", 
+                "%s %s %s\t%s\t%s", 
                 tutor.name,
                 tutor.firstSurname,
                 tutor.lastSurname,
@@ -182,8 +226,17 @@ public class SearchPanel extends BasePanel
             menu.addItem(option, displayText);
         }
 
-        System.out.println("Nombre completo - Correo electronico - RFC");
+        menu.addBlankLine();
+        menu.addItem("v", "Volver al menú anterior");
+
+        System.out.println("Tutores encontrados\n");
+        System.out.println("[#]\tNombre completo\tCorreo electronico\tRFC");
         String option = menu.show("Escoja una elemento");
+
+        if (option.equalsIgnoreCase("v"))
+        {
+            return null;
+        }
 
         int index = Integer.parseInt(option);
         return tutors[index];

@@ -17,4 +17,7 @@ public class Student
     public String addressPostalCode;
     public String curp;
     public String nss;
+
+    public ScholarPeriod period;
+    public EducationLevel level;
 }

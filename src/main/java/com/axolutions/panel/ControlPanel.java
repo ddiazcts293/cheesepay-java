@@ -26,7 +26,7 @@ public class ControlPanel extends BasePanel
     
     public ControlPanel(AppContext appContext)
     {
-        super(appContext);
+        super(appContext, Location.ControlPanel);
     }
 
     @Override

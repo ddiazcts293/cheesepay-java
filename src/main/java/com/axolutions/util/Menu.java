@@ -50,6 +50,12 @@ public class Menu
         return this;
     }
 
+    public Menu addBlankLine()
+    {
+        items.add(new MenuItem("", ""));
+        return this;
+    }
+
     public void clearItems()
     {
         items.clear();
@@ -67,19 +73,38 @@ public class Menu
 
     public String show(String prompt)
     {
+        return show(prompt, true);
+    }
+
+    public String show(String prompt, boolean addBlankLineBeforeList)
+    {
         String key = "";
         boolean exitFromLoop = false;
 
         System.out.println();
         if (title != null && title.length() > 0)
         {
-            System.out.println(title + "\n");
+            System.out.println(title);
         }
 
-        items.forEach((item) ->
-            System.out.printf("[%s] - %s\n\033[s",
-                item.getKey(),
-                item.getText()));
+        if (addBlankLineBeforeList)
+        {
+            System.out.println();
+        }
+
+        for (var item : items) 
+        {
+            if (!item.key.isBlank())
+            {
+                System.out.printf("[%s] - %s\n\033[s",
+                    item.getKey(),
+                    item.getText());
+            }
+            else
+            {
+                System.out.println();
+            }
+        }
 
         do
         {
@@ -96,7 +121,7 @@ public class Menu
 
             for (var item : items)
             {
-                if (item.getKey().compareTo(key) == 0)
+                if (!item.getKey().isBlank() && item.getKey().equalsIgnoreCase(key))
                 {
                     exitFromLoop = true;
                 }

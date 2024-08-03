@@ -1,23 +1,54 @@
 package com.axolutions.panel;
 
-public class PanelTransitionArgs 
+/**
+ * Representa una clase que contiene datos de transición entre paneles.
+ */
+public class PanelTransitionArgs
 {
-    public Location newLocation;
-    public Location currentLocation;
-    public Object obj;
+    private Location requestedLocation;
+    private Location lastLocation;
+    private Object obj;
 
-    public PanelTransitionArgs(Location newLocation, Object obj)
+    /**
+     * Crea un nuevo objeto PanelTransitionArgs.
+     * @param requestedLocation Ubicación solicitada
+     * @param lastLocation Última ubicación
+     * @param obj Objeto establecido desde la última ubicación
+     */
+    public PanelTransitionArgs(
+        Location requestedLocation,
+        Location lastLocation,
+        Object obj)
     {
-        this.newLocation = newLocation;
+        this.requestedLocation = requestedLocation;
+        this.lastLocation = lastLocation;
         this.obj = obj;
     }
 
-    public PanelTransitionArgs(
-        Location newLocation, 
-        Location currentLocation,
-        Object obj)
+    /**
+     * Obtiene la obicación solicitada.
+     * @return Location
+     */
+    public Location getRequestedLocation()
     {
-        this(newLocation, obj);
-        this.currentLocation = currentLocation;
+        return requestedLocation;
+    }
+
+    /**
+     * Obtiene la última ubicación.
+     * @return Location
+     */
+    public Location getLastLocation()
+    {
+        return lastLocation;
+    }
+
+    /**
+     * Obtiene el objeto establecido desde la última ubicación.
+     * @return Objeto
+     */
+    public Object getObj()
+    {
+        return obj;
     }
 }
