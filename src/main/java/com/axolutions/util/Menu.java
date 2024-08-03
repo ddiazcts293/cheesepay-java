@@ -30,12 +30,14 @@ public class Menu
     private Scanner scanner;
     private ArrayList<MenuItem> items;
     private String title;
+    private int itemCount;
 
     public Menu(Scanner scanner)
     {
         this.scanner = scanner;
         this.items = new ArrayList<>();
         this.title = "";
+        this.itemCount = 0;
     }
 
     public Menu(Scanner scanner, String title)
@@ -50,6 +52,16 @@ public class Menu
         return this;
     }
 
+    public <T> Menu addItems(T[] items)
+    {
+        for (var item : items)
+        {
+            addItem(Integer.toString(itemCount++), item.toString());
+        }
+
+        return this;
+    }
+
     public Menu addBlankLine()
     {
         items.add(new MenuItem("", ""));
@@ -61,9 +73,10 @@ public class Menu
         items.clear();
     }
 
-    public void setTitle(String title) 
+    public Menu setTitle(String title)
     {
         this.title = title;
+        return this;
     }
 
     public String show()
@@ -73,26 +86,15 @@ public class Menu
 
     public String show(String prompt)
     {
-        return show(prompt, true);
-    }
-
-    public String show(String prompt, boolean addBlankLineBeforeList)
-    {
         String key = "";
         boolean exitFromLoop = false;
 
-        System.out.println();
         if (title != null && title.length() > 0)
         {
             System.out.println(title);
         }
 
-        if (addBlankLineBeforeList)
-        {
-            System.out.println();
-        }
-
-        for (var item : items) 
+        for (var item : items)
         {
             if (!item.key.isBlank())
             {
