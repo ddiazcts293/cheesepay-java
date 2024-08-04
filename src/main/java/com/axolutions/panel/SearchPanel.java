@@ -4,6 +4,9 @@ import com.axolutions.AppContext;
 import com.axolutions.db.type.*;
 import com.axolutions.panel.args.SearchType;
 
+/**
+ * Representa el panel de búsqueda de alumnos.
+ */
 public class SearchPanel extends BasePanel
 {
     /**

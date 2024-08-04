@@ -7,24 +7,27 @@ import com.axolutions.db.type.ScholarPeriod;
 import com.axolutions.db.type.Student;
 import com.axolutions.util.Menu;
 
+/**
+ * Representa el panel de consulta de grupos.
+ */
 public class GroupQueryPanel extends BasePanel
 {
     /**
-     * DOING: Panel de consulta de grupos
+     * DONE: Panel de consulta de grupos
      *
-     * Aquí se muestran a los alumnos que pertenecen a los diferentes grupos, 
+     * Aquí se muestran a los alumnos que pertenecen a los diferentes grupos,
      * ya sea por ciclo escolar, grado y nivel educativo
      * 1. Inicio
-     * 2. Preguntar el ciclo escolar, nivel educativo, grado y grupo ya sea 
-     *    mostrando un menú para cada opción o que el usuario lo ingrese 
+     * 2. Preguntar el ciclo escolar, nivel educativo, grado y grupo ya sea
+     *    mostrando un menú para cada opción o que el usuario lo ingrese
      *    directamente
      * 3. Mostrar los alumnos que pertenecen a esos grupos
      * 4. Fin
-     * 
+     *
      * CONSULTAS:
      * - Obtener lista de alumnos de un grupo en un ciclo y nivel educativo
      *   DATOS:
-     *   - 
+     *   -
      */
 
     /**
@@ -37,209 +40,283 @@ public class GroupQueryPanel extends BasePanel
     }
 
     @Override
-    public PanelTransitionArgs show(PanelTransitionArgs args) 
+    public PanelTransitionArgs show(PanelTransitionArgs args)
     {
         System.out.println("Consulta de grupos");
 
-        // Declara las variables para almacenar el 
+        // Declara las variables para almacenar los parametros de búsqueda
         EducationLevel selectedLevel = null;
         ScholarPeriod selectedPeriod = null;
-        String option;
-        Menu menu = createMenu("Filtrado de grupos");
-        menu.addItem("c", "Seleccionar ciclo escolar");
-        menu.addItem("n", "Seleccionar nivel educativo");
-        menu.addItem("v", "Volver al menú principal");
 
+        // Crea un menú para establecer uno de los parámetros requeridos
+        String option;
+        Menu menu = createMenu("\nFiltrado de grupos\n")
+            .addItem("c", "Seleccionar ciclo escolar")
+            .addItem("n", "Seleccionar nivel educativo")
+            .addItem("v", "Volver al menú principal");
+
+        // Bucle para repetir el menú
         do
         {
-            option = menu.show("Seleccione una opción: ");
-            
-            switch (option) 
+            // Muestra el menú y espera por una opción
+            option = menu.show("Seleccione una opción");
+            // Procesa la opción escogida
+            switch (option)
             {
+                // Niveles educativos
                 case "n":
+                case "N":
                     selectedLevel = selectEducationLevel();
                     break;
+                // Ciclos escolares
                 case "c":
+                case "C":
                     selectedPeriod = selectScholarPeriod();
                     break;
+                // Otra opción, en este caso "Volver"
                 default:
                     return null;
             }
 
+            // Verifica si tanto nivel como periodo fueron seleccionados
             if (selectedLevel != null && selectedPeriod != null)
             {
+                // Muestra los grupos
                 showGroups(selectedLevel, selectedPeriod);
+                // Reestablece los parámetros
                 selectedLevel = null;
                 selectedPeriod = null;
             }
+
+        // Indica que el bucle se ejecutará infinitamente
         } while (true);
     }
 
+    /**
+     * Selecciona un nivel educativo de una lista.
+     * @return Objeto que representa un nivel educativo
+     */
     private EducationLevel selectEducationLevel()
     {
+        // Declara las variables
         EducationLevel selection = null;
         EducationLevel[] levels;
-        String option;
 
-        try 
+        // Bloque para intentar obtener los niveles educativos
+        try
         {
             levels = dbContext.getEducationLevels();
         }
-        catch (Exception e) 
+        catch (Exception e)
         {
+            /// Avisa de que hubo un error
             System.out.println("Error al obtener los datos de los niveles " +
                 "educativos");
 
+            // Termina la función sin devolver nada
             return null;
         }
 
-        Menu menu = createMenu("Niveles educativos");
-        for (int i = 0; i < levels.length; i++) 
-        {
-            var level = levels[i];
-            menu.addItem(Integer.toString(i), level.description);
-        }
+        // Crea y muestra un menú
+        String option = createMenu("\nNiveles educativos\n")
+            .addItems(levels)
+            .addBlankLine()
+            .addItem("v", "Volver al menú principal")
+            .show("Seleccione una opción");
 
-        menu.addBlankLine();
-        menu.addItem("v", "Volver al menú principal");
-
-        option = menu.show("Seleccione una opción");
+        // Verifica si la opción escogida no es "Volver"
         if (!option.equalsIgnoreCase("v"))
         {
+            // Obtiene el objeto correspondiente al nivel educativo seleccionado
+            // basandose en el valor de la opción convertido a entero
             int index = Integer.parseInt(option);
             selection = levels[index];
         }
-        
+
+        // Retorna el nivel educativo seleccionado
         return selection;
     }
 
+    /**
+     * Selecciona un periodo escolar de una lista
+     * @return Objeto que representa un periodo escolar
+     */
     private ScholarPeriod selectScholarPeriod()
     {
+        // Declara las variables
         ScholarPeriod selection = null;
         ScholarPeriod[] periods;
-        String option;
 
-        try 
+        // Bloque para intentar obtener los periodos escolares
+        try
         {
             periods = dbContext.getScholarPeriods();
         }
-        catch (Exception e) 
+        catch (Exception e)
         {
             System.out.println("Error al obtener los datos de ciclos " +
                 "escolares");
+            
+                // Termina la función sin devolver nada
             return null;
         }
 
-        Menu menu = createMenu("Ciclos escolares");
-        for (int i = 0; i < periods.length; i++) 
-        {
-            var level = periods[i];
-            String description = String.format("%d - %d", 
-                level.startingDate.getYear(),
-                level.endingDate.getYear());
+        // Crea y muestra un menú
+        String title = "\nCiclos escolares\n\nCiclo|Fechas inicio-fin";
+        String option = createMenu(title)
+            .addItems(periods)
+            .addBlankLine()
+            .addItem("v", "Volver al menú principal")
+            .show("Seleccione una opción");
 
-            menu.addItem(Integer.toString(i), description);
-        }
-
-        menu.addBlankLine();
-        menu.addItem("v", "Volver al menú principal");
-
-        option = menu.show("Seleccione una opción");
+        // Verifica si la opción escogida no es "Volver"
         if (!option.equalsIgnoreCase("v"))
         {
+            // Obtiene el objeto correspondiente al ciclo escolar seleccionado
+            // basandose en el valor de la opción convertido a entero
             int index = Integer.parseInt(option);
             selection = periods[index];
         }
-        
+
+        // Retorna el ciclo escolar seleccionado
         return selection;
     }
 
+    /**
+     * Muestra los grupos en un nivel educativo y un ciclo escolar definidos.
+     * @param level Nivel educativo
+     * @param period Ciclo escolar
+     */
     private void showGroups(EducationLevel level, ScholarPeriod period)
     {
+        // Declara una variable para almacenar los grupos
         Group[] groups;
 
-        try 
+        // Bloque para intentar obtener los grupos
+        try
         {
             groups = dbContext.getGroups(period.code, level.code);
         }
-        catch (Exception e) 
+        catch (Exception e)
         {
             System.out.println("Error al obtener los grupos");
+            // Termina la función
             return;
         }
 
-        String text = String.format(
-            "Mostrando grupos para %s en el ciclo escolar %d-%d\n",
+        // Crea una cadena de texto para la cabecera del menú
+        String title = String.format(
+            "\nMostrando grupos para %s en el ciclo escolar %d-%d\n\n" +
+            "Seleccione un grupo para obtener un listado de los alumnos\n\n" +
+            "[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos",
             level.description,
             period.startingDate.getYear(),
             period.endingDate.getYear());
-        
-        System.out.println(text);
-        Menu menu = createMenu();
-        menu.setTitle("Nivel\t\tGrupo\tPeriodo\tEstudiantes");
-        
-        for (int i = 0; i < groups.length; i++) 
+
+        // Crea el menú y le añade las opciones
+        Menu menu = createMenu(title)
+            .addItems(groups)
+            .addBlankLine()
+            .addItem("v", "Volver al menú anterior");
+
+        // Bucle para repetir el menú luego de ver selecciona una opción
+        do
         {
-            var group = groups[i];
-            text = String.format("%s\t%d-%s\t%d-%d\t%d",
-                group.level.description,
+            // Muestra el menú y espera por una opción
+            String option = menu.show("Seleccione un grupo");
+
+            // Verifica si la opción escogida es "Volver"
+            if (option.equalsIgnoreCase("v"))
+            {
+                // Termina el bucle
+                break;
+            }
+
+            // Obtiene el objeto correspondiente al grupo seleccionado basandose
+            // en el valor de la opción convertida a entero
+            int index = Integer.parseInt(option);
+            var group = groups[index];
+            
+            // Muestra los alumnos del grupo
+            showGroupStudents(group);
+        
+        // Indica que el bucle se ejecutará infinitamente
+        } while (true);
+    }
+
+    /**
+     * Muestra a los alumnos de un grupo.
+     * @param group Grupo seleccionado
+     */
+    private void showGroupStudents(Group group)
+    {
+        // Declara una variable para almacenar la opción escogida
+        String option;
+
+        // Bucle que repite el menú
+        do
+        {
+            // Crea una cadena de texto formateada con la información del grupo
+            String info = String.format("Información de grupo\n\n" +
+                "Identificador: %d\n" +
+                "Grado: %d\n" +
+                "Letra: %s\n" +
+                "Periodo escolar: %d-%d\n" + 
+                "Fecha inicial: %s\n" +
+                "Fecha final: %s\n" +
+                "Cantidad de alumnos: %d\n\n" +
+                "Seleccione a un alumno o elija una acción a realizar\n\n" +
+                "[#] - Matricula|Nombre completo|Género|CURP",
+                group.number,
                 group.grade,
                 group.letter,
                 group.period.startingDate.getYear(),
                 group.period.endingDate.getYear(),
+                group.period.startingDate,
+                group.period.endingDate,
                 group.studentCount);
 
-            menu.addItem(Integer.toString(i), text);
-        }
+            // Declara una variable para almacenar los alumnos del grupo actual
+            Student[] students;
 
-        menu.addBlankLine();
-        menu.addItem("v", "Volver al menú anterior");
-
-        do 
-        {
-            String option = menu.show("Seleccione un grupo");
-            if (option.equalsIgnoreCase("v"))
+            // Bloque para intentar obtener los alumnos del grupo
+            try
             {
-                return;
+                students = dbContext.getGroupStudents(group);
+            }
+            catch (Exception e)
+            {
+                // Avisa ocurrió un error
+                System.out.println(
+                    "Error al obtener los alumnos de los grupos");
+
+                // Termina la función
+                students = new Student[0];
             }
 
+            // Crea un menú, lo muestra y espera por una opción
+            option = createMenu(info)
+                .addItems(students)
+                .addBlankLine()
+                .addItem("v", "Volver al menú anterior")
+                .show();
+
+            // Verifica si la opción escogida es "Volver"
+            if (option.equalsIgnoreCase("v"))
+            {
+                // Finaliza el bucle
+                break;
+            }
+
+            // A partir de este punto se considera que se eligió a un alumno, 
+            // por lo que se convierte la opción escogida a número y se obtiene 
+            // el objeto del alumno correspondiente
             int index = Integer.parseInt(option);
-            var group = groups[index];
-            showGroupStudents(group);
+            // Navega hacia la pantalla de información de alumno pasando el
+            // objeto con la informació del alumno seleccionado
+            goTo(Location.StudentInformationPanel, students[index]);
+            
+        // Repite el bucle infinitamente
         } while (true);
-    }
-
-    private void showGroupStudents(Group group)
-    {
-        Student[] students;
-
-        try 
-        {
-            students = dbContext.getGroupStudents(group);
-        }
-        catch (Exception e)
-        {
-            System.out.println("Error al obtener los alumnos de los grupos");
-            return;
-        }
-
-        System.out.println("Matricula\tNombre\tCiclo\tNivel");
-
-        for (int i = 0; i < students.length; i++) 
-        {
-            var student = students[i];
-            String text = String.format("%s\t%s %s %s\t%d-%d\t%s", 
-                student.enrollment,
-                student.name,
-                student.firstSurname,
-                student.lastSurname,
-                student.period.startingDate.getYear(),
-                student.period.endingDate.getYear(),
-                student.level.description);
-
-            System.out.println(text);
-        }
-
-        console.pause("Presione ENTER para continar...");
     }
 }

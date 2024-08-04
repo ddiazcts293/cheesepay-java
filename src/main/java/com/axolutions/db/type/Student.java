@@ -18,8 +18,8 @@ public class Student
     public String curp;
     public String nss;
 
-    public ScholarPeriod period;
-    public EducationLevel level;
+    public ScholarPeriod period = new ScholarPeriod();
+    public EducationLevel level = new EducationLevel();
     
     @Override
     public String toString() 

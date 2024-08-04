@@ -47,12 +47,10 @@ public class StudentInformationPanel extends BasePanel
         // Declara una variable para almacenar al alumno
         Student student = null;
 
-        // Verifica si la última ubicación es el panel de búsqueda y si el
-        // objeto transferido es del tipo Alumno
-        if (args.getLastLocation() == Location.SearchPanel
-            && args.getObj() instanceof Student)
+        // Verifica si el objeto transferido es del tipo Alumno
+        if (args.getObj() instanceof Student)
         {
-            // Si es así, se convierte y asigna el objeto trasnferido
+            // Si es así, se convierte y asigna el objeto transferido
             student = (Student)args.getObj();
         }
         else
@@ -183,20 +181,33 @@ public class StudentInformationPanel extends BasePanel
         do
         {
             // Crea una cadena de texto formateada con la información del alumno
-            String info = "Información de alumno\n\n" +
-                "Matricula: " + student.enrollment + "\n" +
-                "Nombre: " + student.name + "\n" +
-                "Apellido paterno: " + student.firstSurname + "\n" +
-                "Apellido materno: " + student.lastSurname + "\n" +
-                "Genero: " + student.gender + "\n" +
-                "Edad: " + student.age + " años\n" +
-                "Fecha de nacimiento: " + student.dateOfBirth + "\n" +
-                "CURP: " + student.curp + "\n" +
-                "NSS: " + (student.nss == null ? "N/A" : student.nss) + "\n" +
-                "Calle: " + student.addressStreet + "\n" +
-                "Numero: " + student.addressNumber + "\n" +
-                "Colonia: " + student.addressDistrict + "\n" +
-                "Código Postal: " + student.addressPostalCode;
+            String info = String.format("Información de alumno\n\n" +
+                "Matricula: %s\n" +
+                "Nombre: %s\n" +
+                "Apellido paterno: %s\n" +
+                "Apellido materno: %s\n" +
+                "Genero: %s\n" +
+                "Edad: %s años\n" +
+                "Fecha de nacimiento: %s\n" +
+                "CURP: %s\n" +
+                "NSS: %s\n" +
+                "Calle: %s\n" +
+                "Numero: %s\n" +
+                "Colonia: %s\n" +
+                "Código Postal: %s\n",
+                student.enrollment,
+                student.name,
+                student.firstSurname,
+                student.lastSurname != null ? student.lastSurname : "N/A",
+                student.gender,
+                student.age,
+                student.dateOfBirth,
+                student.curp,
+                student.nss != null ? student.nss : "N/A",
+                student.addressStreet,
+                student.addressNumber,
+                student.addressDistrict,
+                student.addressPostalCode);
 
             // Bloque para intentar obtener a los tutores registrados del alumno
             try
@@ -206,7 +217,7 @@ public class StudentInformationPanel extends BasePanel
                 Tutor tutors[] = dbContext.getStudentTutors(student.enrollment);
 
                 // Añade una sección para mostrar los tutores registrados
-                info += "\n\nTutores registrados\n";
+                info += "\nTutores registrados:\n";
 
                 // Bucle que recorre el arreglo de tutores obtenidos
                 for (var tutor : tutors)
@@ -426,12 +437,11 @@ public class StudentInformationPanel extends BasePanel
             {
                 // Crea una cadena de texto con la información de cada pago
                 String displayText = String.format(
-                    "%s\t%d-%s\t%d-%d",
-                    group.level.description,
+                    "%s\t%d-%s\t%s",
+                    group.level,
                     group.grade,
                     group.letter,
-                    group.period.startingDate.getYear(),
-                    group.period.endingDate.getYear());
+                    group.period);
 
                 // Imprime cada registro por línea
                 System.out.println(displayText);
@@ -594,36 +604,53 @@ public class StudentInformationPanel extends BasePanel
      */
     private void showTutorInfo(Tutor tutor)
     {
-        // Crea un menú y le añade algunas opciones
+        // Declara una variable para almacenar la opción escogida
         String option;
-        Menu menu = createMenu()
-            .addItem("e", "Editar correo eléctronico")
-            .addItem("a", "Agregar número telefónico")
-            .addItem("q", "Quitar número telefónico")
-            .addItem("v", "Volver al menú anterior");
-
-        // Bucle que repite el menú
+        
+        // Bucle que repite el menú luego de realizar una acción en él
         do
         {
-            // Crea una cadena de texto formateada con la información del tutor
-            String info = "Información de tutor\n\n" + 
-                "Nombre: " + tutor.name + "\n" +
-                "Apellido paterno: " + tutor.firstSurname + "\n" +
-                "Apellido materno: " + tutor.lastSurname + "\n" +
-                "Parentesco: " + tutor.kinship + "\n" +
-                "Correo electronico: " + tutor.email + "\n" +
-                "RFC: " + tutor.rfc + "\n" +
-                "Telefonos: ";
+            // Crea un menú y le añade algunas opciones
+            Menu menu = createMenu()
+                .addItem("e", "Editar correo eléctronico")
+                .addItem("a", "Agregar número telefónico");
 
-            // Bucle que recorre la lista de números de telefonos
-            for (var phone : tutor.phones)
+            // Crea una cadena de texto formateada con la información del tutor
+            String info = String.format("Información de tutor\n\n" +
+                "Nombre: %s\n" +
+                "Apellido paterno: %s\n" +
+                "Apellido materno: %s\n" +
+                "Parentesco: %s\n" +
+                "Correo electronico: %s\n" +
+                "RFC: %s\n",
+                tutor.name,
+                tutor.firstSurname,
+                tutor.lastSurname != null ? tutor.lastSurname : "N/A",
+                tutor.kinship,
+                tutor.email,
+                tutor.rfc);
+
+            // Verifica si el tutor tiene números de telefono registrados
+            if (tutor.phones.size() > 0)
             {
-                // Agrega el número de teléfono a la lista
-                info += "\n- " + phone.phone;
-            }
+                info += "\nTelefonos:\n";
+
+                // Bucle que recorre la lista de números de telefonos
+                for (var phone : tutor.phones)
+                {
+                    // Agrega el número de teléfono al texto de información
+                    info += "- " + phone.phone + "\n";
+                }
             
+                // Agrega la opción para quitar un número
+                menu.addItem("q", "Quitar número telefónico");
+            }
+
+            // Agrega la opción para volver al menú anterior
+            menu.addItem("v", "Volver al menú anterior");
+
             // Establece el título del menú
-            menu.setTitle(info + "\n");
+            menu.setTitle(info);
 
             // Muestra el menú y espera por una opción
             option = menu.show("Seleccione una acción");
@@ -717,8 +744,9 @@ public class StudentInformationPanel extends BasePanel
         // Crea un menú vacío para mostrar los números de teléfono registrados
         Menu menu = createMenu();
 
-        // Bucle que repite el menú una y otra vez
-        do
+        // Bucle que repite el menú una y otra vez mientras el tutor tenga al
+        // menos un número de teléfono
+        while (tutor.phones.size() > 0)
         {
             // Limpia el menú
             menu.clearItems();
@@ -757,8 +785,6 @@ public class StudentInformationPanel extends BasePanel
                 System.out.println(
                     "Error al intentar eliminar el número de telefono");
             }
-
-        // Repite el bucle infinitamente
-        } while (true);
+        }
     }
 }
