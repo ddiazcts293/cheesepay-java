@@ -98,7 +98,7 @@ public abstract class BasePanel
      */
     protected Menu createMenu()
     {
-        return new Menu(appContext.getScanner());
+        return new Menu(appContext.getScanner(), null);
     }
     
     /**
