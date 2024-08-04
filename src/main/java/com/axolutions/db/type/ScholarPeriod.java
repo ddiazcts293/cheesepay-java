@@ -12,7 +12,7 @@ public class ScholarPeriod
     public String toString() 
     {
         return String.format(
-            "%d-%d|%s - %s",
+            "%d-%d|%s|%s",
             startingDate.getYear(),
             endingDate.getYear(),
             startingDate,
