@@ -1,16 +1,36 @@
 package com.axolutions.db.type;
 
-import com.axolutions.db.type.payment.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
 
+/**
+ * Representa un pago que puede contener múltiples cobros o tarifas pagadas en
+ * una sola exhibición.
+ */
 public class Payment 
 {
-    public String code;
-    public SpecialEvent specialEvent;
-    public Maintenance maintenance;
-    public SchoolSupplies schoolSupplies;
-    public Tuition tuition;
-    public Registration registration;
-    public Uniform uniform;
+    /**
+     * Folio.
+     */
+    public int folio;
 
-    public ScholarPeriod period;
+    /**
+     * Fecha.
+     */
+    public LocalDate date;
+
+    /**
+     * Monto total.
+     */
+    public float totalAmount;
+
+    /**
+     * Ciclo escolar.
+     */
+    public ScholarPeriod period = new ScholarPeriod();
+
+    /**
+     * Representa una lista de cobros pagados.
+     */
+    public ArrayList<PaidFee> paidFees = new ArrayList<>();
 }
