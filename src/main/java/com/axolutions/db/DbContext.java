@@ -709,7 +709,7 @@ public class DbContext
             "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "INNER JOIN niveles_educativos AS ne ON m.nivel = ne.codigo " +
             "WHERE ce.codigo = ? AND ne.codigo = ? " +
-            "ORDER BY fechaMes";
+            "ORDER BY month";
 
         var statement = getConnection().prepareStatement(sqlQuery);
         statement.setString(1, period.code);
@@ -847,16 +847,16 @@ public class DbContext
     public Fee getMaintenanceFee(ScholarPeriod period) throws SQLException
     {
         String sqlQuery = "SELECT " +
-            "c.codigo AS feeId," +
-            "ce.codigo AS period," +
-            "ce.fechaInicio AS startingDate," +
-            "ce.fechaFin AS endingDate," +
-            "m.numero AS maintenanceId," +
-            "m.concepto AS concept," +
-            "m.costo AS cost" +
-            "FROM cobros AS c" +
-            "INNER JOIN mantenimiento AS m ON c.mantenimiento = m.numero" +
-            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo" +
+            "c.codigo AS feeId, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "m.numero AS maintenanceId, " +
+            "m.concepto AS concept, " +
+            "m.costo AS cost " +
+            "FROM cobros AS c " +
+            "INNER JOIN mantenimiento AS m ON c.mantenimiento = m.numero " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "WHERE ce.codigo = ? " +
             "LIMIT 1"; // Solo se requiere un elemento
 
