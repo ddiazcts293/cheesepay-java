@@ -183,11 +183,11 @@ public class DbContext
             "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
             "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "WHERE a.matricula = ? " +
-            "GROUP BY p.folio ";
+            "GROUP BY p.folio";
 
         var statement = getConnection().prepareStatement(sqlQuery);
         statement.setString(1, enrollment);
-        var resultSet = statement.executeQuery(sqlQuery);
+        var resultSet = statement.executeQuery();
 
         while (resultSet.next())
         {
