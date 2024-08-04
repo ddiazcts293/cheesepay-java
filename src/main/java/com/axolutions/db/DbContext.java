@@ -375,6 +375,15 @@ public class DbContext
             "a.nombre AS nombre, " +
             "a.primerApellido AS primerApellido, " +
             "a.segundoApellido AS segundoApellido, " +
+            "a.genero AS genero, " +
+            "a.edad AS edad, " +
+            "a.fechaNacimiento AS fechaNacimiento, " +
+            "a.domicilioCalle AS domicilioCalle, " +
+            "a.domicilioNumero AS domicilioNumero, " +
+            "a.domicilioColonia AS domicilioColonia, " +
+            "a.domicilioCP AS domicilioCP, " +
+            "a.curp AS curp, " +
+            "a.nss AS nss, " +
             "ce.codigo AS ciclo, " +
             "ce.fechaInicio AS fechaInicio, " +
             "ce.fechaFin AS fechaFin, " +
@@ -398,15 +407,20 @@ public class DbContext
             student.name = resultSet.getString(2);
             student.firstSurname = resultSet.getString(3);
             student.lastSurname = resultSet.getString(4);
-
-            student.period = new ScholarPeriod();
-            student.period.code = resultSet.getString(5);
-            student.period.startingDate = resultSet.getDate(6).toLocalDate();
-            student.period.endingDate = resultSet.getDate(7).toLocalDate();
-
-            student.level = new EducationLevel();
-            student.level.code = resultSet.getString(8);
-            student.level.description = resultSet.getString(9);
+            student.gender = resultSet.getString(5);
+            student.age = resultSet.getInt(6);
+            student.dateOfBirth = resultSet.getDate(7).toLocalDate();
+            student.addressStreet = resultSet.getString(8);
+            student.addressNumber = resultSet.getString(9);
+            student.addressDistrict = resultSet.getString(10);
+            student.addressPostalCode = resultSet.getString(11);
+            student.curp = resultSet.getString(12);
+            student.nss = resultSet.getString(13);
+            student.period.code = resultSet.getString(14);
+            student.period.startingDate = resultSet.getDate(15).toLocalDate();
+            student.period.endingDate = resultSet.getDate(16).toLocalDate();
+            student.level.code = resultSet.getString(17);
+            student.level.description = resultSet.getString(18);
 
             list.add(student);
         }
