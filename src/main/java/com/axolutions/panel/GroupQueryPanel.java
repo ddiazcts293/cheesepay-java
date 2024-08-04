@@ -50,7 +50,7 @@ public class GroupQueryPanel extends BasePanel
 
         // Crea un menú para establecer uno de los parámetros requeridos
         String option;
-        Menu menu = createMenu("\nFiltrado de grupos\n")
+        Menu menu = createMenu("Filtrado de grupos")
             .addItem("c", "Seleccionar ciclo escolar")
             .addItem("n", "Seleccionar nivel educativo")
             .addItem("v", "Volver al menú principal");
@@ -118,7 +118,7 @@ public class GroupQueryPanel extends BasePanel
         }
 
         // Crea y muestra un menú
-        String option = createMenu("\nNiveles educativos\n")
+        String option = createMenu("Niveles educativos")
             .addItems(levels)
             .addBlankLine()
             .addItem("v", "Volver al menú principal")
@@ -162,8 +162,8 @@ public class GroupQueryPanel extends BasePanel
         }
 
         // Crea y muestra un menú
-        String title = "\nCiclos escolares\n\nCiclo|Fechas inicio-fin";
-        String option = createMenu(title)
+        String option = createMenu("Ciclos escolares")
+            .setHeader("Ciclo|Fechas inicio-fin")
             .addItems(periods)
             .addBlankLine()
             .addItem("v", "Volver al menú principal")
@@ -206,15 +206,15 @@ public class GroupQueryPanel extends BasePanel
 
         // Crea una cadena de texto para la cabecera del menú
         String title = String.format(
-            "\nMostrando grupos para %s en el ciclo escolar %d-%d\n\n" +
-            "Seleccione un grupo para obtener un listado de los alumnos\n\n" +
-            "[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos",
+            "Mostrando grupos para %s en el ciclo escolar %d-%d\n\n" +
+            "Seleccione un grupo para obtener un listado de los alumnos",
             level.description,
             period.startingDate.getYear(),
             period.endingDate.getYear());
 
         // Crea el menú y le añade las opciones
         Menu menu = createMenu(title)
+            .setHeader("[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos")
             .addItems(groups)
             .addBlankLine()
             .addItem("v", "Volver al menú anterior");
@@ -265,8 +265,7 @@ public class GroupQueryPanel extends BasePanel
                 "Fecha inicial: %s\n" +
                 "Fecha final: %s\n" +
                 "Cantidad de alumnos: %d\n\n" +
-                "Seleccione a un alumno o elija una acción a realizar\n\n" +
-                "[#] - Matricula|Nombre completo|Género|CURP",
+                "Seleccione a un alumno o elija una acción a realizar",
                 group.number,
                 group.grade,
                 group.letter,
@@ -296,6 +295,7 @@ public class GroupQueryPanel extends BasePanel
 
             // Crea un menú, lo muestra y espera por una opción
             option = createMenu(info)
+                .setHeader("[#] - Matricula|Nombre completo|Género|CURP")
                 .addItems(students)
                 .addBlankLine()
                 .addItem("v", "Volver al menú anterior")

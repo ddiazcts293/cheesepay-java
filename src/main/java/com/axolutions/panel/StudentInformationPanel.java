@@ -81,8 +81,8 @@ public class StudentInformationPanel extends BasePanel
                 {
                     // De ser así, crea un nuevo menú para preguntar si se desea
                     // volver a intentar
-                    String title = "\nNo se pudo localizar la matricula\n\n" +
-                        "¿Desea volver a intentarlo?\n";
+                    String title = "No se pudo localizar la matricula\n\n" +
+                        "¿Desea volver a intentarlo?";
 
                     // Muestra el menú y espera por una opción
                     String option = createMenu(title)
@@ -121,7 +121,7 @@ public class StudentInformationPanel extends BasePanel
             {
                 // Crea una cadena formateada con el nombre del alumno
                 String studentInfo = String.format(
-                    "\nAlumno: %s - %s %s %s\n",
+                    "Alumno: %s - %s %s %s",
                     student.enrollment,
                     student.name,
                     student.firstSurname,
@@ -217,14 +217,14 @@ public class StudentInformationPanel extends BasePanel
                 Tutor tutors[] = dbContext.getStudentTutors(student.enrollment);
 
                 // Añade una sección para mostrar los tutores registrados
-                info += "\nTutores registrados:\n";
+                info += "\nTutores registrados:";
 
                 // Bucle que recorre el arreglo de tutores obtenidos
                 for (var tutor : tutors)
                 {
                     // Agrega la información del tutur al texto de información
-                    info += tutor.toString()
-                        .replace("|", " - ") + "\n";
+                    info += "\n" + tutor.toString()
+                        .replace("|", " - ");
                 }
             }
             catch (Exception e)
@@ -483,14 +483,14 @@ public class StudentInformationPanel extends BasePanel
             }
 
             // Crea una cadena de texto para la cabecera del menú
-            String title = "\nTutores registrados\n\n" +
+            String title = "Tutores registrados\n\n" +
                 "Seleccione a un tutor para ver la información de este o " +
-                "elija una acción a realizar\n\n" + 
-                "[#] - Parentesco|Nombre|Correo electronico|RFC";
+                "elija una acción a realizar";
             
             // Crea un nuevo menú, lo muestra y espera a que el usuario 
             // seleccione una opción
             String option = createMenu(title)
+                .setHeader("[#] - Parentesco|Nombre|Correo electronico|RFC")
                 .addItems(tutors) // Agrega la lista de tutores al menú
                 .addBlankLine() // Agrega una Linea en blanco
                 .addItem("a", "Agregar a un tutor")
@@ -538,7 +538,7 @@ public class StudentInformationPanel extends BasePanel
 
         // Pregunta si el tutor ya fue registrado anteriormente
         String option = createMenu()
-            .setTitle("\n¿El tutor se encuentra registrado?\n")
+            .setTitle("¿El tutor se encuentra registrado?")
             .addItem("s", "Si")
             .addItem("n", "No")
             .show();
@@ -622,7 +622,7 @@ public class StudentInformationPanel extends BasePanel
                 "Apellido materno: %s\n" +
                 "Parentesco: %s\n" +
                 "Correo electronico: %s\n" +
-                "RFC: %s\n",
+                "RFC: %s",
                 tutor.name,
                 tutor.firstSurname,
                 tutor.lastSurname != null ? tutor.lastSurname : "N/A",
@@ -633,13 +633,13 @@ public class StudentInformationPanel extends BasePanel
             // Verifica si el tutor tiene números de telefono registrados
             if (tutor.phones.size() > 0)
             {
-                info += "\nTelefonos:\n";
+                info += "\n\nTelefonos:";
 
                 // Bucle que recorre la lista de números de telefonos
                 for (var phone : tutor.phones)
                 {
                     // Agrega el número de teléfono al texto de información
-                    info += "- " + phone.phone + "\n";
+                    info += "\n- " + phone.phone;
                 }
             
                 // Agrega la opción para quitar un número
@@ -756,7 +756,7 @@ public class StudentInformationPanel extends BasePanel
             menu.addBlankLine();
             menu.addItem("v", "Volver al menú anterior");
             // Establece el título del menú
-            menu.setTitle("Quitando números de teléfono\n");
+            menu.setTitle("Quitando números de teléfono");
 
             // Muestra el menú y espera por una opción
             String option = menu.show("Seleccione una opción");

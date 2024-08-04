@@ -30,7 +30,7 @@ public class MainMenuPanel extends BasePanel
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
         String option = createMenu()
-            .setTitle("Bienvenido, ¿qué le gustaría hacer?\n")
+            .setTitle("Bienvenido, ¿qué le gustaría hacer?")
             .addItem("1", "Registrar a un nuevo alumno")
             .addItem("2", "Ver información de alumno")
             .addItem("3", "Buscar a un alumno")

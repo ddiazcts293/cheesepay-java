@@ -78,9 +78,7 @@ public class SearchPanel extends BasePanel
         if (student != null)
         {
             // Dirige al panel de información de alumno
-            return setLocation(
-                Location.StudentInformationPanel,
-                student);
+            return setLocation(Location.StudentInformationPanel, student);
         }
 
         // Retorna nulo
@@ -107,6 +105,7 @@ public class SearchPanel extends BasePanel
 
             // Solicita un término de búsqueda
             String text = console.readString("Texto");
+            System.out.println();
 
             // Verifica que la longitud de la cadena ingresada sea mayor que 0
             if (text.length() > 0)
@@ -142,7 +141,7 @@ public class SearchPanel extends BasePanel
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
                 String option = createMenu()
-                    .setTitle("\n¿Desea continuar buscando?\n")
+                    .setTitle("¿Desea continuar buscando?")
                     .addItem("s", "Si")
                     .addItem("n", "No")
                     .show();
@@ -217,7 +216,7 @@ public class SearchPanel extends BasePanel
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
                 String option = createMenu()
-                    .setTitle("\n¿Desea continuar buscando?\n")
+                    .setTitle("¿Desea continuar buscando?")
                     .addItem("s", "Si")
                     .addItem("n", "No")
                     .show();
@@ -245,12 +244,12 @@ public class SearchPanel extends BasePanel
     private Student selectStudent(Student[] students)
     {
         // Crea una cadena de texto para mostrar como cabecera del menú
-        String title = "\nAlumnos encontrados: " + students.length + "\n\n" +
-            "Seleccione a un alumno o elija una acción a realizar\n\n" +
-            "[#] - Matricula|Nombre completo|Género|CURP";
+        String title = "Alumnos encontrados: " + students.length + "\n\n" +
+            "Seleccione a un alumno o elija una acción a realizar";
 
         // Crea un nuevo menú, lo muestra y espera por una opción
         String option = createMenu(title)
+            .setHeader("[#] - Matricula|Nombre completo|Género|CURP")
             .addItems(students) // Agrega la lista de alumnos al menú
             .addBlankLine() // Agrega una línea en blanco
             .addItem("v", "Volver al menú anterior")
@@ -279,12 +278,12 @@ public class SearchPanel extends BasePanel
     private Tutor selectTutor(Tutor[] tutors)
     {
         // Crea una cadena de texto para mostrar como cabecera
-        String title = "\nTutores encontrados: " + tutors.length + "\n\n" +
-            "Seleccione a un tutor o elija una acción a realizar\n\n" +
-            "[#] - Parentesco|Nombre|Correo electronico|RFC";
+        String title = "Tutores encontrados: " + tutors.length + "\n\n" +
+            "Seleccione a un tutor o elija una acción a realizar";
 
         // Crea un nuevo menú, lo muestra y espera por una opción
         String option = createMenu(title)
+            .setHeader("[#] - Parentesco|Nombre|Correo electronico|RFC")
             .addItems(tutors) // Agrega la lista de tutores
             .addBlankLine() // Agrega una linea en blanco
             .addItem("v", "Volver al menú anterior")
