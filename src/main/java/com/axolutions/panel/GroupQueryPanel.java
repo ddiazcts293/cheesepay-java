@@ -93,96 +93,6 @@ public class GroupQueryPanel extends BasePanel
     }
 
     /**
-     * Selecciona un nivel educativo de una lista.
-     * @return Objeto que representa un nivel educativo
-     */
-    private EducationLevel selectEducationLevel()
-    {
-        // Declara las variables
-        EducationLevel selection = null;
-        EducationLevel[] levels;
-
-        // Bloque para intentar obtener los niveles educativos
-        try
-        {
-            levels = dbContext.getEducationLevels();
-        }
-        catch (Exception e)
-        {
-            /// Avisa de que hubo un error
-            System.out.println("Error al obtener los datos de los niveles " +
-                "educativos");
-
-            // Termina la función sin devolver nada
-            return null;
-        }
-
-        // Crea y muestra un menú
-        String option = createMenu("Niveles educativos")
-            .addItems(levels)
-            .addBlankLine()
-            .addItem("v", "Volver al menú principal")
-            .show("Seleccione una opción");
-
-        // Verifica si la opción escogida no es "Volver"
-        if (!option.equalsIgnoreCase("v"))
-        {
-            // Obtiene el objeto correspondiente al nivel educativo seleccionado
-            // basandose en el valor de la opción convertido a entero
-            int index = Integer.parseInt(option);
-            selection = levels[index];
-        }
-
-        // Retorna el nivel educativo seleccionado
-        return selection;
-    }
-
-    /**
-     * Selecciona un periodo escolar de una lista
-     * @return Objeto que representa un periodo escolar
-     */
-    private ScholarPeriod selectScholarPeriod()
-    {
-        // Declara las variables
-        ScholarPeriod selection = null;
-        ScholarPeriod[] periods;
-
-        // Bloque para intentar obtener los periodos escolares
-        try
-        {
-            periods = dbContext.getScholarPeriods();
-        }
-        catch (Exception e)
-        {
-            System.out.println("Error al obtener los datos de ciclos " +
-                "escolares");
-            
-                // Termina la función sin devolver nada
-            return null;
-        }
-
-        // Crea y muestra un menú
-        String option = createMenu("Ciclos escolares")
-            .setHeader("Ciclo|Fechas inicio-fin")
-            .addItems(periods)
-            .addBlankLine()
-            .addItem("v", "Volver al menú principal")
-            .show("Seleccione una opción");
-
-        // Verifica si la opción escogida no es "Volver"
-        if (!option.equalsIgnoreCase("v"))
-        {
-            // Obtiene el objeto correspondiente al ciclo escolar seleccionado
-            // basandose en el valor de la opción convertido a entero
-            int index = Integer.parseInt(option);
-            selection = periods[index];
-        }
-
-        // Retorna el ciclo escolar seleccionado
-        return selection;
-    }
-
-    /**
      * Muestra los grupos en un nivel educativo y un ciclo escolar definidos.
      * @param level Nivel educativo
      * @param period Ciclo escolar
@@ -200,6 +110,7 @@ public class GroupQueryPanel extends BasePanel
         catch (Exception e)
         {
             System.out.println("Error al obtener los grupos");
+
             // Termina la función
             return;
         }
@@ -212,33 +123,22 @@ public class GroupQueryPanel extends BasePanel
             period.startingDate.getYear(),
             period.endingDate.getYear());
 
-        // Crea el menú y le añade las opciones
-        Menu menu = createMenu(title)
-            .setHeader("[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos")
-            .addItems(groups)
-            .addBlankLine()
-            .addItem("v", "Volver al menú anterior");
-
         // Bucle para repetir el menú luego de ver selecciona una opción
         do
         {
-            // Muestra el menú y espera por una opción
-            String option = menu.show("Seleccione un grupo");
+            // Muestra un menú para seleccionar un solo grupo
+            var selectedGroup = selectFromList(groups, title,
+                "[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos");
 
-            // Verifica si la opción escogida es "Volver"
-            if (option.equalsIgnoreCase("v"))
+            // Verifica si no se seleccionó algún elemento
+            if (selectedGroup == null)
             {
-                // Termina el bucle
+                // Termina el menú
                 break;
             }
 
-            // Obtiene el objeto correspondiente al grupo seleccionado basandose
-            // en el valor de la opción convertida a entero
-            int index = Integer.parseInt(option);
-            var group = groups[index];
-            
             // Muestra los alumnos del grupo
-            showGroupStudents(group);
+            showGroupStudents(selectedGroup);
         
         // Indica que el bucle se ejecutará infinitamente
         } while (true);
@@ -250,9 +150,6 @@ public class GroupQueryPanel extends BasePanel
      */
     private void showGroupStudents(Group group)
     {
-        // Declara una variable para almacenar la opción escogida
-        String option;
-
         // Bucle que repite el menú
         do
         {
@@ -293,28 +190,20 @@ public class GroupQueryPanel extends BasePanel
                 students = new Student[0];
             }
 
-            // Crea un menú, lo muestra y espera por una opción
-            option = createMenu(info)
-                .setHeader("[#] - Matricula|Nombre completo|Género|CURP")
-                .addItems(students)
-                .addBlankLine()
-                .addItem("v", "Volver al menú anterior")
-                .show();
+            // Muestra un menú para seleccionar un solo alumno
+            var student = selectFromList(students, info, 
+                "[#] - Matricula|Nombre completo|Género|CURP");
 
-            // Verifica si la opción escogida es "Volver"
-            if (option.equalsIgnoreCase("v"))
+            // Verifica no se ha seleccionado un alumno
+            if (student == null)
             {
-                // Finaliza el bucle
+                // Termina el bucle
                 break;
             }
 
-            // A partir de este punto se considera que se eligió a un alumno, 
-            // por lo que se convierte la opción escogida a número y se obtiene 
-            // el objeto del alumno correspondiente
-            int index = Integer.parseInt(option);
             // Navega hacia la pantalla de información de alumno pasando el
             // objeto con la informació del alumno seleccionado
-            goTo(Location.StudentInformationPanel, students[index]);
+            goTo(Location.StudentInformationPanel, student);
             
         // Repite el bucle infinitamente
         } while (true);
