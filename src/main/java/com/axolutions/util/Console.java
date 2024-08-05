@@ -275,15 +275,117 @@ public class Console
         //return LocalDate.now();
     }
 
+    /**
+     * Borra el contenido de la pantalla.
+     */
     public void clearDisplay()
     {
         // using flag 2; implement another flags
         System.out.printf("\033[%dJ\033[H", 2);
     }
 
+    /**
+     * Detiene la ejecución del programa hasta que se pulse ENTER.
+     * @param prompt Indicación que es mostrada al usuario
+     */
     public void pause(String prompt)
     {
-        System.out.println(prompt);
+        System.out.print(prompt);
         scanner.nextLine();
+    }
+
+    /**
+     * Imprime un arreglo de elementos como una tabla.
+     * @param <T> Tipo de elemento
+     * @param header Cabecera de la tabla, en la cual las columnas deberán estar
+     * separadas por el carácter de barra vertical |.
+     * @param items Arreglo de elementos.
+     */
+    public <T> void printAsTable(String header, T[] items)
+    {
+        // Patrón de división
+        String regex = "[\\|]";
+        // Divide la cabecera por partes utilizando '|' como separador
+        String[] headerColumns = header.split(regex);
+        // Crea un arreglo para almacenar las longitudes máximas de las columnas
+        int[] maxColumnLengths = new int[headerColumns.length];
+
+        // Paso 1: establecer las longitudes máximas iniciales de acuerdo a las
+        // longitudes de las cabeceras de columnas
+        for (int i = 0; i < headerColumns.length; i++) 
+        {
+            maxColumnLengths[i] = headerColumns[i].length() + 2;
+        }
+
+        // Paso 2: establecer longitudes de acuerdo a los máximos de cada 
+        // columna para cada elemento
+        for (var item : items) 
+        {
+            // Obtiene un arreglo con los campos del elemento
+            String[] itemColumns = item.toString().split(regex, headerColumns.length);
+
+            // Bucle que recorre la lista campos de un elemento para establecer 
+            // las logitudes máximas de cada columna
+            for (int i = 0; i < itemColumns.length; i++) 
+            {
+                // Obtiene la longitud del campo y la incrementa en 2 para que
+                // los campos no queden muy juntos
+                int fieldLength = itemColumns[i].length() + 2;
+
+                // Verifica si la longitud del campo es mayor que el limite ant
+                if (fieldLength > maxColumnLengths[i])
+                {
+                    // Establece la nueva longitud para la columna
+                    maxColumnLengths[i] = fieldLength;
+                }
+            }
+        }
+
+        // Paso 3: imprime la cabecera de la tabla
+        for (int i = 0; i < headerColumns.length; i++) 
+        {
+            // Obtiene el texto de la columna
+            String text = headerColumns[i];
+            // Obtiene la longitud máxima de la columna
+            int maxColumnLength = maxColumnLengths[i];
+            // Obtiene la longitud restante
+            int remainingLength = maxColumnLength - text.length();
+
+            // Imprime el texto de la columna y reposiciona el desplazamiento 
+            // del cursor horizontalmente basándose en la longitud restante
+            System.out.printf("%s\033[%dC", text, remainingLength);
+        }
+
+        // Salto de línea
+        System.out.println();
+
+        // Paso 2: imprime cada elemento de la tabla
+        for (var item : items) 
+        {
+            // Obtiene un arreglo con los campos del elemento
+            String[] itemColumns = item.toString().split(regex, headerColumns.length);
+
+            // Bucle que recorre el arreglo de campos
+            for (int i = 0; i < itemColumns.length; i++) 
+            {
+                // Obtiene el texto del campo
+                String text = itemColumns[i];
+                // Obtiene la longitud máxima de la columna
+                int maxColumnLength = maxColumnLengths[i];
+                int remainingLength = maxColumnLength - text.length();
+
+
+                // Imprime el texto de la columna y reposiciona el desplazamiento 
+                // del cursor horizontalmente basándose en la longitud restante
+                System.out.printf("%s\033[%dC", text, remainingLength);
+            }
+
+            // Imprime un salto de línea después de terminar de agregar todas 
+            // las columnas
+            System.out.println();
+        }
+
+        // Imprime un salto de línea al final de la tabla
+        System.out.println();
     }
 }

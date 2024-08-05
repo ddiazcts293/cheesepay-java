@@ -16,11 +16,13 @@ public class Menu
     {
         private String key;
         private String text;
+        private boolean isRow;
 
-        public MenuItem(String key, String text)
+        public MenuItem(String key, String text, boolean isRow)
         {
             this.key = key;
             this.text = text;
+            this.isRow = isRow;
         }
 
         public String getKey()
@@ -32,9 +34,15 @@ public class Menu
         {
             return text;
         }
+        
+        public boolean isRow() 
+        {
+            return isRow;
+        }
     }
 
     private Scanner scanner;
+    private Console console;
     private ArrayList<MenuItem> items;
     private String title;
     private String header;
@@ -44,9 +52,10 @@ public class Menu
      * Crea un nuevo objeto Menú
      * @param scanner Instancia del objeto Scanner
      */
-    public Menu(Scanner scanner, String title)
+    public Menu(Scanner scanner, Console console, String title)
     {
         this.scanner = scanner;
+        this.console = console;
         this.items = new ArrayList<>();
         this.title = title;
         this.header = null;
@@ -61,7 +70,7 @@ public class Menu
      */
     public Menu addItem(String key, String text)
     {
-        items.add(new MenuItem(key.toUpperCase(), text));
+        items.add(new MenuItem(key.toUpperCase(), text, false));
         return this;
     }
 
@@ -75,7 +84,10 @@ public class Menu
     {
         for (var item : items)
         {
-            addItem(Integer.toString(itemCount++), item.toString());
+            this.items.add(new MenuItem(
+                Integer.toString(itemCount++), 
+                item.toString(), 
+                true));
         }
 
         return this;
@@ -87,7 +99,7 @@ public class Menu
      */
     public Menu addBlankLine()
     {
-        items.add(new MenuItem("", ""));
+        items.add(new MenuItem("", "", false));
         return this;
     }
 
@@ -152,29 +164,48 @@ public class Menu
             System.out.println(title + "\n");
         }
 
-        if (header != null)
-        {
-            System.out.println(header);
-        }
+        // Crea un arreglo para almacenar las líneas del menú
+        ArrayList<String> linesToPrintAsRows = new ArrayList<>();
+        ArrayList<String> linesToPrintNormally = new ArrayList<>();
 
         // Bucle que recorre la lista de opciones
-        for (var item : items)
+        for (int i = 0; i < items.size(); i++) 
         {
-            // Verifica si la clave de la opción no esta en blanco
-            if (!item.key.isBlank())
+            var item = items.get(i);
+            String option = String.format("[%s] - %s",
+                item.getKey(),
+                item.getText());
+
+            // Verifica si el texto de la opción contiene caracteres de 
+            // separación
+            if (item.isRow() && header != null)
             {
-                // De ser así, imprime tanto la clave como el texto de la opción
-                System.out.printf("[%s] - %s\n",
-                    item.getKey(),
-                    item.getText());
+                // De ser así, agrega la opción para imprimir como filas
+                linesToPrintAsRows.add(option);
             }
-            else
+            // Verifica si la clave de la opción no esta en blanco
+            else if (!item.key.isBlank())
             {
-                // De lo contrario, solo imprime una línea en blanco
-                System.out.println();
+                linesToPrintNormally.add(option);
             }
         }
 
+        // Verifica si se establecio una cabecera
+        if (header != null)
+        {
+            // Convierte la lista de opciones a arreglo
+            String[] array = new String[linesToPrintAsRows.size()];
+            linesToPrintAsRows.toArray(array);
+            // Imprime la lista como tabla
+            console.printAsTable(header, array);
+        }
+        
+        // Imprime el resto de las filas
+        for (String string : linesToPrintNormally) 
+        {
+            System.out.println(string);
+        }
+    
         // Imprime un salto de línea y establece un punto de referencia para 
         // mostrar la indicación al usuario
         System.out.println("\n\033[s");
