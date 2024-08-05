@@ -32,7 +32,7 @@ public class PaymentRegistrationPanel extends BasePanel
 
     public PaymentRegistrationPanel(AppContext appContext)
     {
-        super(appContext, Location.StudentRegistrationPanel);
+        super(appContext, Location.PaymentRegistrationPanel);
     }
 
     @Override
@@ -66,7 +66,6 @@ public class PaymentRegistrationPanel extends BasePanel
             menu.addItem(Integer.toString(i), description);
         }
 
-        menu.addBlankLine();
         menu.addItem("v", "Volver al menú principal");
 
         do

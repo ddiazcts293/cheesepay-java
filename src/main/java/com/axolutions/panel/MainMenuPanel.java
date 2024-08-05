@@ -44,15 +44,15 @@ public class MainMenuPanel extends BasePanel
         switch (option)
         {
             case "1":
-                return setLocation(Location.StudentRegistrationPanel);
+                return setLocation(Location.EnrollmentPanel);
             case "2":
-                return setLocation(Location.StudentInformationPanel);
+                return setLocation(Location.StudentInfoPanel);
             case "3":
                 return setLocation(Location.SearchPanel);
             case "4":
                 return setLocation(Location.GroupQueryPanel);
             case "5":
-                return setLocation(Location.PaymentQueryPanel);
+                return setLocation(Location.FeeQueryPanel);
             case "6":
                 return setLocation(Location.ControlPanel);
             case "7":

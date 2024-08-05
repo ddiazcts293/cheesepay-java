@@ -6,11 +6,11 @@ public enum Location
     Previous,
     MainMenu,
     LoginPanel,
-    StudentRegistrationPanel,
+    EnrollmentPanel,
     PaymentRegistrationPanel,
     SearchPanel,
-    StudentInformationPanel,
+    StudentInfoPanel,
     GroupQueryPanel,
-    PaymentQueryPanel,
+    FeeQueryPanel,
     ControlPanel
 }

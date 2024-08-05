@@ -8,7 +8,7 @@ import com.axolutions.panel.args.SearchType;
 /**
  * Representa el panel de información de alumno.
  */
-public class StudentInformationPanel extends BasePanel
+public class StudentInfoPanel extends BasePanel
 {
     /**
      * DONE: Panel de información de alumno
@@ -34,9 +34,9 @@ public class StudentInformationPanel extends BasePanel
      * Crea un nuevo objeto StudentInformationPanel
      * @param appContext Instancia del objeto AppContext
      */
-    public StudentInformationPanel(AppContext appContext)
+    public StudentInfoPanel(AppContext appContext)
     {
-        super(appContext, Location.StudentInformationPanel);
+        super(appContext, Location.StudentInfoPanel);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class StudentInformationPanel extends BasePanel
             do
             {
                 // Solicita al usuario que ingrese la matricula de un alumno
-                String enrollment = console.readString(
+                String studentId = console.readString(
                     "Ingrese la matricula del alumno (5 caracteres)",
                     5);
 
@@ -68,7 +68,7 @@ public class StudentInformationPanel extends BasePanel
                 try
                 {
                     // Realiza una consulta en la base de datos
-                    student = dbContext.getStudent(enrollment);
+                    student = dbContext.getStudent(studentId);
                 }
                 catch (Exception e)
                 {
@@ -85,10 +85,7 @@ public class StudentInformationPanel extends BasePanel
                         "¿Desea volver a intentarlo?";
 
                     // Muestra el menú y espera por una opción
-                    String option = createMenu(title)
-                        .addItem("s", "Si")
-                        .addItem("n", "No")
-                        .show();
+                    String option = showYesNoMenu(title);
 
                     // Verifica si la opción selecciona es "No"
                     if (option.equalsIgnoreCase("n"))
@@ -122,7 +119,7 @@ public class StudentInformationPanel extends BasePanel
                 // Crea una cadena formateada con el nombre del alumno
                 String studentInfo = String.format(
                     "Alumno: %s - %s %s %s",
-                    student.enrollment,
+                    student.studentId,
                     student.name,
                     student.firstSurname,
                     student.lastSurname);
@@ -154,7 +151,7 @@ public class StudentInformationPanel extends BasePanel
                     // Consultar historial de pagos
                     case "h":
                     case "H":
-                        showStudentInvoices(student);
+                        showStudentPayments(student);
                         break;
                     default:
                         break;
@@ -195,7 +192,7 @@ public class StudentInformationPanel extends BasePanel
                 "Numero: %s\n" +
                 "Colonia: %s\n" +
                 "Código Postal: %s\n",
-                student.enrollment,
+                student.studentId,
                 student.name,
                 student.firstSurname,
                 student.lastSurname != null ? student.lastSurname : "N/A",
@@ -203,7 +200,7 @@ public class StudentInformationPanel extends BasePanel
                 student.age,
                 student.dateOfBirth,
                 student.curp,
-                student.nss != null ? student.nss : "N/A",
+                student.ssn != null ? student.ssn : "N/A",
                 student.addressStreet,
                 student.addressNumber,
                 student.addressDistrict,
@@ -214,7 +211,7 @@ public class StudentInformationPanel extends BasePanel
             {
                 // Declara un arreglo para almacenar los tutores de un alumno
                 // consultados en la base de datos
-                Tutor tutors[] = dbContext.getStudentTutors(student.enrollment);
+                Tutor tutors[] = dbContext.getStudentTutors(student.studentId);
 
                 // Añade una sección para mostrar los tutores registrados
                 info += "\nTutores registrados:";
@@ -356,16 +353,16 @@ public class StudentInformationPanel extends BasePanel
      * Muestra la lista de pagos efectuados por un alumno.
      * @param student Objeto con la información de un alumno
      */
-    private void showStudentInvoices(Student student)
+    private void showStudentPayments(Student student)
     {
         // Declara una variable para almacenar los pagos de un alumno
-        Invoice[] invoices;
+        Payment[] payments;
 
         // Bloque para intentar obtener la lista de pagos
         try
         {
             // Realiza una consulta de obtención de pagos para el alumno actual
-            invoices = dbContext.getStudentInvoices(student.enrollment);
+            payments = dbContext.getStudentPayments(student.studentId);
         }
         catch (Exception e)
         {
@@ -376,21 +373,21 @@ public class StudentInformationPanel extends BasePanel
         }
 
         // Verifica si el alumno tiene pagos registrados
-        if (invoices.length > 0)
+        if (payments.length > 0)
         {
             System.out.println("Pagos realizados por el alumno");
 
             // Bucle que recorre el arreglo de pagos obtenidos
-            for (Invoice invoice : invoices)
+            for (Payment payment : payments)
             {
                 // Crea una cadena de texto con la información de cada pago
                 String displayText = String.format(
                     "#%d\t%s\t%d-%d\t$%.2f",
-                    invoice.folio,
-                    invoice.date,
-                    invoice.period.startingDate.getYear(),
-                    invoice.period.endingDate.getYear(),
-                    invoice.totalAmount);
+                    payment.folio,
+                    payment.date,
+                    payment.period.startingDate.getYear(),
+                    payment.period.endingDate.getYear(),
+                    payment.totalAmount);
 
                 // Imprime cada registro por línea
                 System.out.println(displayText);
@@ -416,7 +413,7 @@ public class StudentInformationPanel extends BasePanel
         try
         {
             // Realiza la consulta de obtención de grupos para el alumno actual
-            groups = dbContext.getStudentGroups(student.enrollment);
+            groups = dbContext.getStudentGroups(student.studentId);
         }
         catch (Exception e)
         {
@@ -470,7 +467,7 @@ public class StudentInformationPanel extends BasePanel
             try
             {
                 // Realiza la consulta de obtención de tutores
-                tutors = dbContext.getStudentTutors(student.enrollment);
+                tutors = dbContext.getStudentTutors(student.studentId);
             }
             catch (Exception e)
             {
@@ -492,7 +489,6 @@ public class StudentInformationPanel extends BasePanel
             String option = createMenu(title)
                 .setHeader("[#] - Parentesco|Nombre|Correo electronico|RFC")
                 .addItems(tutors) // Agrega la lista de tutores al menú
-                .addBlankLine() // Agrega una Linea en blanco
                 .addItem("a", "Agregar a un tutor")
                 .addItem("v", "Volver al menú anterior")
                 .show("Seleccione una opción");
@@ -564,7 +560,7 @@ public class StudentInformationPanel extends BasePanel
             case "N":
             {
                 // Dirige al panel de registro para registrar a un nuevo tutor
-                var result = goTo(Location.StudentRegistrationPanel, student);
+                var result = goTo(Location.EnrollmentPanel, student);
                 
                 // Verifica si la instancia devuelta corresponde a un objeto Tutor
                 if (result instanceof Tutor)

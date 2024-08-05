@@ -78,7 +78,7 @@ public class SearchPanel extends BasePanel
         if (student != null)
         {
             // Dirige al panel de información de alumno
-            return setLocation(Location.StudentInformationPanel, student);
+            return setLocation(Location.StudentInfoPanel, student);
         }
 
         // Retorna nulo
@@ -140,11 +140,7 @@ public class SearchPanel extends BasePanel
             if (student == null)
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
-                String option = createMenu()
-                    .setTitle("¿Desea continuar buscando?")
-                    .addItem("s", "Si")
-                    .addItem("n", "No")
-                    .show();
+                String option = showYesNoMenu("¿Desea continuar buscando?");
 
                 // Verifica si la opción escogida es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -215,11 +211,7 @@ public class SearchPanel extends BasePanel
             if (tutor == null)
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
-                String option = createMenu()
-                    .setTitle("¿Desea continuar buscando?")
-                    .addItem("s", "Si")
-                    .addItem("n", "No")
-                    .show();
+                String option = showYesNoMenu("¿Desea continuar buscando?");
 
                 // Verifica si la opción escogida es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -246,28 +238,10 @@ public class SearchPanel extends BasePanel
         // Crea una cadena de texto para mostrar como cabecera del menú
         String title = "Alumnos encontrados: " + students.length + "\n\n" +
             "Seleccione a un alumno o elija una acción a realizar";
-
+     
         // Crea un nuevo menú, lo muestra y espera por una opción
-        String option = createMenu(title)
-            .setHeader("[#] - Matricula|Nombre completo|Género|CURP")
-            .addItems(students) // Agrega la lista de alumnos al menú
-            .addBlankLine() // Agrega una línea en blanco
-            .addItem("v", "Volver al menú anterior")
-            .show("Escoja una elemento");
-
-        // Verifica si la opción escogida es "Volver"
-        if (option.equalsIgnoreCase("v"))
-        {
-            // Termina la función sin retornar ningún objeto
-            return null;
-        }
-
-        // A partir de este punto se considera que se eligió a un alumno, por lo
-        // que se convierte la opción escogida a número y se obtiene el alumno
-        // correspondiente
-        int index = Integer.parseInt(option);
-        // Retorna el objeto con la información del alumno
-        return students[index];
+        return selectFromList(students, title,
+            "[#] - Matricula|Nombre completo|Género|CURP");
     }
 
     /**
@@ -282,24 +256,7 @@ public class SearchPanel extends BasePanel
             "Seleccione a un tutor o elija una acción a realizar";
 
         // Crea un nuevo menú, lo muestra y espera por una opción
-        String option = createMenu(title)
-            .setHeader("[#] - Parentesco|Nombre|Correo electronico|RFC")
-            .addItems(tutors) // Agrega la lista de tutores
-            .addBlankLine() // Agrega una linea en blanco
-            .addItem("v", "Volver al menú anterior")
-            .show("Escoja una elemento");
-
-        // Verifica si la opción escogida es "Volver"
-        if (option.equalsIgnoreCase("v"))
-        {
-            // Termina la función sin retornar ningún objeto
-            return null;
-        }
-
-        // A partir de este punto se considera que se eligió a un tutor, por lo
-        // que se convierte la opción escogida a número y se obtiene el tutor
-        // correspondiente
-        int index = Integer.parseInt(option);
-        return tutors[index];
+        return selectFromList(tutors, title,
+            "[#] - Parentesco|Nombre|Correo electronico|RFC");
     }
 }

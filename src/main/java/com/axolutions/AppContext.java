@@ -48,11 +48,11 @@ public class AppContext
         {
             new MainMenuPanel(this),
             new LoginPanel(this),
-            new StudentRegistrationPanel(this),
+            new EnrollmentPanel(this),
             new SearchPanel(this),
-            new StudentInformationPanel(this),
+            new StudentInfoPanel(this),
             new GroupQueryPanel(this),
-            new PaymentQueryPanel(this),
+            new FeeQueryPanel(this),
             new ControlPanel(this),
         };
 

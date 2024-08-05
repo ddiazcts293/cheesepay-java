@@ -8,7 +8,7 @@ import com.axolutions.util.Menu;
 /**
  * Representa el panel de registro de alumno.
  */
-public class StudentRegistrationPanel extends BasePanel
+public class EnrollmentPanel extends BasePanel
 {
     /**
      * DONE: Panel de registro de alumnos
@@ -37,9 +37,9 @@ public class StudentRegistrationPanel extends BasePanel
      * Crea un nuevo objeto StudentRegistrationPanel
      * @param appContext Instancia del objeto AppContext 
      */
-    public StudentRegistrationPanel(AppContext appContext)
+    public EnrollmentPanel(AppContext appContext)
     {
-        super(appContext, Location.StudentRegistrationPanel);
+        super(appContext, Location.EnrollmentPanel);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class StudentRegistrationPanel extends BasePanel
         Tutor tutor = null;
         
         // Verifica si la última ubicación es el panel de información de alumnos
-        if (args.getLastLocation() == Location.StudentInformationPanel)
+        if (args.getLastLocation() == Location.StudentInfoPanel)
         {
             // Si es así, llama a la función de registrar tutor para recabar
             // información y almacenarla en la base de datos
@@ -265,7 +265,7 @@ public class StudentRegistrationPanel extends BasePanel
                 "Fecha de nacimiento");
             student.curp = console.readString(
                 "CURP (requerido, 19 caracteres)",19);
-            student.nss = console.readString(
+            student.ssn = console.readString(
                 "NSS (opcional, 11 caracteres)",
                 0, 11);
             student.addressStreet = console.readString(

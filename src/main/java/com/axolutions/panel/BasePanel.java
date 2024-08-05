@@ -1,7 +1,5 @@
 package com.axolutions.panel;
 
-import java.util.function.Supplier;
-
 import com.axolutions.AppContext;
 import com.axolutions.db.DbContext;
 import com.axolutions.db.type.EducationLevel;
@@ -102,7 +100,7 @@ public abstract class BasePanel
      */
     protected Menu createMenu()
     {
-        return new Menu(appContext.getScanner(), null);
+        return new Menu(appContext.getScanner(), console, null);
     }
 
     /**
@@ -112,7 +110,21 @@ public abstract class BasePanel
      */
     protected Menu createMenu(String title)
     {
-        return new Menu(appContext.getScanner(), title);
+        return new Menu(appContext.getScanner(), console, title);
+    }
+
+    /**
+     * Muestra un menú de Si/No.
+     * @param title Título del menú
+     * @return Opción elegida (S o N)
+     */
+    protected String showYesNoMenu(String title)
+    {
+        return createMenu()
+            .setTitle(title)
+            .addItem("s", "Si")
+            .addItem("n", "No")
+            .show();
     }
 
     /* Funciones comunes entre paneles */
@@ -126,7 +138,7 @@ public abstract class BasePanel
         String option = createMenu(title)
             .setHeader(header)
             .addItems(items)
-            .addBlankLine()
+            //.addBlankLine()
             .addItem("v", "Volver al menú anterior")
             .show("Seleccione una opción");
 
@@ -164,7 +176,7 @@ public abstract class BasePanel
 
         return selectFromList(levels,
             "Niveles educativos",
-            "Descripción");
+            "[#] - Descripción");
     }
 
     /**
@@ -193,6 +205,6 @@ public abstract class BasePanel
         // Crea y muestra un menú
         return selectFromList(periods,
             "Ciclos escolares",
-            "Ciclo|Fechas inicio-fin");
+            "[#] - Ciclo|Fecha inicial|Fecha final");
     }
 }

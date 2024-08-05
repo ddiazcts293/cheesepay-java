@@ -159,8 +159,8 @@ public class GroupQueryPanel extends BasePanel
                 "Grado: %d\n" +
                 "Letra: %s\n" +
                 "Periodo escolar: %d-%d\n" + 
-                "Fecha inicial: %s\n" +
-                "Fecha final: %s\n" +
+                "Fecha de inicio de curso: %s\n" +
+                "Fecha de fin de curso: %s\n" +
                 "Cantidad de alumnos: %d\n\n" +
                 "Seleccione a un alumno o elija una acción a realizar",
                 group.number,
@@ -203,7 +203,7 @@ public class GroupQueryPanel extends BasePanel
 
             // Navega hacia la pantalla de información de alumno pasando el
             // objeto con la informació del alumno seleccionado
-            goTo(Location.StudentInformationPanel, student);
+            goTo(Location.StudentInfoPanel, student);
             
         // Repite el bucle infinitamente
         } while (true);

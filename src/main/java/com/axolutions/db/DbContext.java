@@ -184,7 +184,7 @@ public class DbContext
         return array;
     }
 
-    public Payment[] getStudentInvoices(String studentId) throws SQLException
+    public Payment[] getStudentPayments(String studentId) throws SQLException
     {
         ArrayList<Payment> list = new ArrayList<>();
         String sqlQuery = "SELECT " +
