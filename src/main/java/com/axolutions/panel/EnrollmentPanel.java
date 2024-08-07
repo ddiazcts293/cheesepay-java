@@ -1,5 +1,7 @@
 package com.axolutions.panel;
 
+import java.sql.SQLException;
+
 import com.axolutions.AppContext;
 import com.axolutions.db.type.*;
 import com.axolutions.panel.args.SearchType;
@@ -45,37 +47,57 @@ public class EnrollmentPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        System.out.println("Panel de registro de alumnos");
+        System.out.println("Panel de registro de nuevos alumnos");
 
-        // Declara una variable para almacenar el tutor responsable del alumno
-        Tutor tutor = null;
-        
         // Verifica si la última ubicación es el panel de información de alumnos
         if (args.getLastLocation() == Location.StudentInfoPanel)
         {
             // Si es así, llama a la función de registrar tutor para recabar
             // información y almacenarla en la base de datos
-            tutor = registerTutor();
-            // Retorna el objeto Tutor registrado
+            var tutor = registerTutor();
+            // Retorna al panel anterior el objeto con la información del tutor
+            // que acaba de ser registrado
             return setLocation(Location.Previous, tutor);
         }
 
-        // Crea un nuevo menú y le añade algunas opciones
-        String option;
-        Menu menu = createMenu();
-        menu.setTitle("¿El tutor del alumno está registrado?");
-        menu.addItem("s", "Si");
-        menu.addItem("n", "No");
-        
-        // Muestra el menú y espera una opción
-        option = menu.show();
+        // Declara una variable que contiene la información del alumno cuando 
+        // termina el proceso de inscripción de un alumno
+        Student student = registerStudent();
 
-        // Procesa la opción escogida
-        switch (option)
+        // Verifica si el proceso de registro fue cancelado
+        if (student == null)
         {
-            // Si
-            case "s":
-            case "S":
+            System.out.println("Proceso de registro de alumno cancelado");
+
+            // Termina el proceso
+            return null;
+        }
+
+        System.out.printf("\nRegistro de alumno realizado exitosamente\n" +
+            "Nombre: %s %s %s\n" +
+            "Matricula asignada: %s\n\n" +
+            "Ahora debe registrar al menos un tutor responsable del alumno\n",
+            student.name,
+            student.firstSurname,
+            student.lastSurname,
+            student.studentId);
+
+        // Recuento de tutores registrados asociados al alumno
+        int registeredTutorsCount = 0;
+        
+        // Bucle para permitir registrarv varios tutores con un alumno
+        do
+        {
+            // Declara una variable que contiene la información del tutor
+            Tutor tutor = null;
+
+            // Muestra un menú de Si/No para preguntar si el tutor ya fue 
+            // registrado
+            String option = showYesNoMenu(
+                "¿El tutor del alumno ya fue registrado anteriormente?");
+
+            // Verifica si la opción elegida es "Si"
+            if (option.equalsIgnoreCase("S"))
             {
                 // Dirige al panel de búsqueda indicando que se deberá buscar a 
                 // un tutor
@@ -88,53 +110,58 @@ public class EnrollmentPanel extends BasePanel
                     tutor = (Tutor)result;
                 }
 
-                break;
             }
-            // No
-            case "n":
-            case "N":
+            // De lo contrario,
+            else
+            {
                 // Registra a un nuevo tutor
                 tutor = registerTutor();
-                break;
-            default:
-                break;
-        }
-
-        // Verifica si se ha seleccionado a un tutor
-        if (tutor != null)
-        {
-            // Borra la lista de elementos en el menú anteriormente creado y 
-            // añade algunas opciones
-            menu.clearItems();
-            menu.setTitle("¿Desea registrar a otro alumno?");
-            menu.addItem("s", "Si");
-            menu.addItem("n", "No");
-
-            // Inicia un bucle
-            do
+            }
+        
+            // Verifica si realmente se encontró o registró a un tutor para
+            // asociarlo con el alumno
+            if (tutor != null)
             {
-                // Registra a un nuevo alumno
-                Student student = registerStudent(tutor);
-
-                // Verifica si realmente se ha registrado a un tutor
-                if (student == null)
+                try
                 {
-                    System.out.println("Registro de alumno cancelado");
+                    // Intenta asociar el tutor con el alumno
+                    dbContext.registerStudentWithTutor(student, tutor);
+                    registeredTutorsCount++;
                 }
-
-                // Muestra el menú y espera una opción
-                option = menu.show();
-
-            // Repite mientras se elija "Si" en el menú
-            } while (option.equalsIgnoreCase("s"));
+                catch (SQLException e)
+                {
+                    System.out.println(
+                        "Error al intentar asociar el tutor con el alumno");
+                }
+            }
+            
+            // Muestra un menú de Si/No para preguntar si desea registrar a otro
+            // tutor con el alumno
+            option = showYesNoMenu("¿Desea registrar a otro tutor?");
+            
+            // Verifica si la opción elegida es "No"
+            if (option.equalsIgnoreCase("N"))
+            {
+                // Termina el bucle de registro de tutores
+                break;
+            }
         }
-        else
+
+        // Indica que el bucle debe ejecutarse infinitamente
+        while (true);
+        
+        // Verifica si la cantidad de tutores registrados con el alumno es cero
+        if (registeredTutorsCount == 0)
         {
-            System.out.println("No se ha seleccionado a un tutor");
+            System.out.println(
+                "No se ha registrado ningún tutor con el alumno\n" +
+                "Deberá registrar uno más adelante para poder realizar pagos");
+
+            console.pause("Presione ENTER para continuar...");
         }
 
-        // Retorna al panel anterior
-        return null;
+        // Retorna al panel de información de alumno
+        return setLocation(Location.StudentInfoPanel, student);
     }
 
     /**
@@ -159,26 +186,26 @@ public class EnrollmentPanel extends BasePanel
         // usuario lo necesite
         do
         {
-            System.out.println("Registrando tutor\n");
+            System.out.println("\nFormulario de registro de tutor\n");
 
             // Crea un nuevo objeto Tutor
             tutor = new Tutor();
             tutor.name = console.readString(
-                "Nombre de pila (requerido, 30 caracteres max.)",
-                3, 30);
+                "Nombre de pila (requerido, 30 caracteres máx.)",
+                2, 30);
             tutor.firstSurname = console.readString(
-                "Apellido paterno (requerido, 30 caracteres max.)",
-                3, 30);
+                "Apellido paterno (requerido, 30 caracteres máx.)",
+                2, 30);
             tutor.lastSurname = console.readString(
-                "Apellido materno (opcional, 30 caracteres max.)",
+                "Apellido materno (opcional, 30 caracteres máx.)",
                 0,  30);
             tutor.email = console.readString(
-                "Correo electronico (requerido, 40 caracteres max.)",
-                10, 40);
+                "Correo electronico (requerido, 5 caracteres mín; 40 máx.)",
+                5, 40);
             tutor.rfc = console.readString(
                 "RFC (requerido, 13 caracteres)", 13);
             tutor.kinship = console.readString(
-                "Parentesco (requerido, 10 caracteres)",
+                "Parentesco (requerido, 3 caracteres mín.; 10 máx.)",
                 3, 10);
 
             // Muestra el menú para confirmar el registro y espera que el 
@@ -223,10 +250,9 @@ public class EnrollmentPanel extends BasePanel
     /**
      * Recaba la información de un nuevo alumno y la registra en la base de 
      * datos.
-     * @param tutor Objeto Tutor que es responsable del alumno
      * @return Objeto Alumno creado o null si se cancelo la operación
      */
-    private Student registerStudent(Tutor tutor)
+    private Student registerStudent()
     {
         // Declara las variables para almacenar al alumno que se registra
         Student student;
@@ -243,42 +269,40 @@ public class EnrollmentPanel extends BasePanel
         // usuario lo necesite
         do
         {
-            System.out.println("Registrando alumno\n");
+            System.out.println("\nFormulario de registro de alumno\n");
 
             // Crea un nuevo objeto Alumno 
             student = new Student();
             student.name = console.readString(
-                "Nombre de pila (requerido, 30 caracteres max.)",
+                "Nombre de pila (requerido, 3 caracteres mín; 30 máx.)",
                 3, 30);
             student.firstSurname = console.readString(
-                "Apellido paterno (requerido, 30 caracteres max.)",
+                "Apellido paterno (requerido, 3 caracteres mín; 30 máx.)",
                 3, 30);
             student.lastSurname = console.readString(
-                "Apellido materno (opcional, 30 caracteres max.)",
+                "Apellido materno (opcional, 30 caracteres máx.)",
                 0, 30);
             student.gender = console.readString(
-                "Genero (opcional, 10 caracteres max.)",
+                "Genero (opcional, 10 caracteres máx.)",
                 0, 10);
-            student.age = console.readInt(
-                "Edad (requerido, 3 min.)", 3);
-            student.dateOfBirth = console.readDate(
-                "Fecha de nacimiento");
+            student.age = console.readInt("Edad (requerida)");
+            student.dateOfBirth = console.readDate("Fecha de nacimiento");
             student.curp = console.readString(
                 "CURP (requerido, 19 caracteres)",19);
             student.ssn = console.readString(
                 "NSS (opcional, 11 caracteres)",
                 0, 11);
             student.addressStreet = console.readString(
-                "Calle (requerido, 30 caracteres max.)",
-                3, 30);
+                "Calle (requerido, 1 caracter mín; 30 máx.)",
+                1, 30);
             student.addressNumber = console.readString(
-                "Numero (requerido, 20 caracteres max.)",
+                "Numero (requerido, 1 caracter mín; 20 máx.)",
                 1, 20);
             student.addressDistrict = console.readString(
-                "Colonia (requerido, 30 caracteres max.)",
-                2, 30);
+                "Colonia (requerido, 1 caracter mín; 30 máx.)",
+                1, 30);
             student.addressPostalCode= console.readString(
-                "Codigo postal (requerido, 5 caracteres max.)",
+                "Codigo postal (requerido, 1 caracter mín; 5 máx.)",
                 1, 5);
 
             // Muestra el menú para confirmar el registro y espera que el 
@@ -291,9 +315,15 @@ public class EnrollmentPanel extends BasePanel
                 // Bloque para intentar realiza el registro
                 try
                 {
+                    // Verifica si la longitud del NSS es cero
+                    if (student.ssn.length() == 0)
+                    {
+                        // Establece el NSS en null
+                        student.ssn = null;
+                    }
+
                     // Llama a la función que registra al alumno
                     dbContext.registerStudent(student);
-                    dbContext.registerStudentWithTutor(student, tutor);
 
                     // En caso de no fallar, termina el bucle y retorna el
                     // objeto Alumno creado
