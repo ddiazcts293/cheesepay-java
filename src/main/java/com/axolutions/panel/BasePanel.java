@@ -4,6 +4,7 @@ import com.axolutions.AppContext;
 import com.axolutions.db.DbContext;
 import com.axolutions.db.type.EducationLevel;
 import com.axolutions.db.type.ScholarPeriod;
+import com.axolutions.db.type.fee.FeeType;
 import com.axolutions.util.Console;
 import com.axolutions.util.Menu;
 
@@ -122,40 +123,107 @@ public abstract class BasePanel
     {
         return createMenu()
             .setTitle(title)
-            .addItem("s", "Si")
-            .addItem("n", "No")
+            .addItem("S", "Si")
+            .addItem("N", "No")
             .show();
     }
 
     /* Funciones comunes entre paneles */
 
+    /**
+     * Permite selecciona un elemento de una arreglo.
+     * @param <T> Tipo de elemento
+     * @param items Arreglo de elementos
+     * @param title Título de la tabla
+     * @param header Cabecera de las columnas de la tabla
+     * @return Elemento seleccionado o nulo si el arreglo no contiene elementos
+     * o si no se escogió ninguno. Si la lista contiene un solo elemento, este 
+     * es devuelto.
+     */
     protected <T> T selectFromList(T[] items, String title, String header)
     {
         // Declara la variable para almacenar el elemento seleccionado
         T selectedItem = null;
 
-        // Crea y muestra un menú
-        String option = createMenu(title)
-            .setHeader(header)
-            .addItems(items)
-            //.addBlankLine()
-            .addItem("v", "Volver al menú anterior")
-            .show("Seleccione una opción");
-
-        // Verifica si la opción escogida no es "Volver"
-        if (!option.equalsIgnoreCase("v"))
+        // Verifica si la lista contiene más de un elemento
+        if (items.length > 1)
         {
-            // Obtiene el objeto correspondiente a la opción seleccionada
-            // basandose en el valor de la opción convertida a entero
-            int index = Integer.parseInt(option);
-            selectedItem = items[index];
+            // Crea y muestra un menú
+            String option = createMenu(title)
+                .setHeader(header)
+                .addItems(items)
+                //.addBlankLine()
+                .addItem("v", "Volver al menú anterior")
+                .show("Seleccione una opción");
+
+            // Verifica si la opción escogida no es "Volver"
+            if (!option.equalsIgnoreCase("v"))
+            {
+                // Obtiene el objeto correspondiente a la opción seleccionada
+                // basandose en el valor de la opción convertida a entero
+                int index = Integer.parseInt(option);
+                selectedItem = items[index];
+            }
+        }
+        // De lo contrario, verifica si la lista contiene un solo elemento
+        else if (items.length == 1)
+        {
+            // Selecciona el primer y único elemento
+            selectedItem = items[0];
+        }
+
+        else
+        {
+            // No hace nada más que imprimir un mensaje
+            System.out.println("No hay nada que seleccionar");
         }
 
         return selectedItem;
     }
 
     /**
-     * Selecciona un nivel educativo de una lista.
+     * Permite seleccionar un tipo de cobro de una lista.
+     * @return Tipo de cobro
+     */
+    protected FeeType selectFeeType()
+    {
+        // Crea un menú para seleccionar una categoría
+        String selectedCategory;
+        Menu menu = createMenu("Seleccione un tipo de cobros")
+            .addItem("I", "Inscripciones")
+            .addItem("M", "Mensualidades")
+            .addItem("U", "Uniformes")
+            .addItem("P", "Papelería")
+            .addItem("X", "Mantenimiento")
+            .addItem("E", "Eventos especiales")
+            .addBlankLine()
+            .addItem("V", "Volver al menú anterior");
+
+        // Muestra el menú de seleción de categoría y espera por una opción
+        selectedCategory = menu.show("Seleccione una opción");
+        
+        // Procesa la opción elegida y retorna el valor correspondiente
+        switch (selectedCategory)
+        {
+            case "I": // Inscripciones"
+                return FeeType.Enrollment;
+            case "M": // Mensualidades"
+                return FeeType.Monthly;
+            case "U": // Uniformes"
+                return FeeType.Uniform;
+            case "P": // Cobros de papelería"
+                return FeeType.Stationery;
+            case "X": // Cobros de mantenimiento"
+                return FeeType.Maintenance;
+            case "E": // Eventos especiales"
+                return FeeType.SpecialEvent;
+            default: // Preterminado: volver al menú anterior
+                return FeeType.Unknown;
+        }
+    }
+
+    /**
+     * Permite seleccionar un nivel educativo de una lista.
      * @return Objeto que representa un nivel educativo
      */
     protected EducationLevel selectEducationLevel()
@@ -180,7 +248,7 @@ public abstract class BasePanel
     }
 
     /**
-     * Selecciona un periodo escolar de una lista
+     * Permite selecciona un periodo escolar de una lista
      * @return Objeto que representa un periodo escolar
      */
     protected ScholarPeriod selectScholarPeriod()

@@ -75,6 +75,19 @@ public class Menu
     }
 
     /**
+     * Agrega una opción al menú
+     * @param key Clave de la opción
+     * @param text Texto de la opción
+     * @param addAsRow Agrega el elemento como fila
+     * @return Referencia al propio menú
+     */
+    public Menu addItem(String key, String text, boolean addAsRow)
+    {
+        items.add(new MenuItem(key.toUpperCase(), text, addAsRow));
+        return this;
+    }
+
+    /**
      * Agrega una lista de valores como opciones en el menú
      * @param <T> Tipo de valor genérico
      * @param items Arreglo de valores
@@ -193,11 +206,18 @@ public class Menu
         // Verifica si se establecio una cabecera
         if (header != null)
         {
-            // Convierte la lista de opciones a arreglo
-            String[] array = new String[linesToPrintAsRows.size()];
-            linesToPrintAsRows.toArray(array);
-            // Imprime la lista como tabla
-            console.printAsTable(header, array);
+            if (!linesToPrintAsRows.isEmpty())
+            {
+                // Convierte la lista de opciones a arreglo
+                String[] array = new String[linesToPrintAsRows.size()];
+                linesToPrintAsRows.toArray(array);
+                // Imprime la lista como tabla
+                console.printAsTable(header, array);
+            }
+            else
+            {
+                System.out.println(header);
+            }
         }
         
         // Imprime el resto de las filas

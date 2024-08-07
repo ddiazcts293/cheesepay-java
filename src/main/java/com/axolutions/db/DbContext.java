@@ -131,7 +131,8 @@ public class DbContext
             "INNER JOIN grupos_alumnos AS ga ON g.numero = ga.grupo " +
             "INNER JOIN alumnos AS a ON ga.alumno = a.matricula " +
             "INNER JOIN niveles_educativos AS ne ON g.nivel = ne.codigo " +
-            "WHERE a.matricula = ?";
+            "WHERE a.matricula = ? " +
+            "ORDER BY g.grado DESC";
 
         var statement = getConnection().prepareStatement(sqlQuery);
         statement.setString(1, studentId);
@@ -648,7 +649,22 @@ public class DbContext
         statement.executeUpdate();
     }
 
-    public Fee getEnrollmentFee(ScholarPeriod period, EducationLevel level) throws SQLException
+    public Fee getEnrollmentFee(String periodCode, String levelCode) throws SQLException
+    {
+        var items = getEnrollmentFees(periodCode);
+
+        for (Fee fee : items) 
+        {
+            if (fee.enrollment.code.equals(levelCode))
+            {
+                return fee;
+            }
+        }
+
+        return null;
+    }
+
+    public Fee[] getEnrollmentFees(String periodCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
             "c.codigo AS feeId, " +
@@ -663,19 +679,16 @@ public class DbContext
             "INNER JOIN inscripciones AS i ON c.inscripcion = i.codigo " +
             "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "INNER JOIN niveles_educativos AS ne ON i.nivel = ne.codigo " +
-            "WHERE ce.codigo = ? AND ne.codigo = ?" +
-            "LIMIT 1"; // Solo se requiere un elemento
+            "WHERE ce.codigo = ?";
 
         var statement = getConnection().prepareStatement(sqlQuery);
-        statement.setString(1, period.code);
-        statement.setString(2, level.code);
-
+        statement.setString(1, periodCode);
         var resultSet = statement.executeQuery();
-        Fee fee = null;
+        ArrayList<Fee> list = new ArrayList<>();
 
-        if (resultSet.next())
+        while (resultSet.next())
         {
-            fee = new Fee();
+            var fee = new Fee();
             fee.enrollment = new EnrollmentFee();
             fee.code = resultSet.getString("feeId");
             fee.period.code = resultSet.getString("period");
@@ -685,12 +698,17 @@ public class DbContext
             fee.enrollment.cost = resultSet.getFloat("cost");
             fee.enrollment.level.code = resultSet.getString("level");
             fee.enrollment.level.description = resultSet.getString("levelDescription");
+
+            list.add(fee);
         }
 
-        return fee;
+        // Convierte la lista de elementos a un arreglo
+        Fee[] array = new Fee[list.size()];
+        list.toArray(array);
+        return array;
     }
 
-    public Fee[] getMonthlyFees(ScholarPeriod period, EducationLevel level) throws SQLException
+    public Fee[] getMonthlyFees(String periodCode, String levelCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
             "c.codigo AS feeId, " +
@@ -712,8 +730,8 @@ public class DbContext
             "ORDER BY month";
 
         var statement = getConnection().prepareStatement(sqlQuery);
-        statement.setString(1, period.code);
-        statement.setString(2, level.code);
+        statement.setString(1, periodCode);
+        statement.setString(2, levelCode);
 
         var resultSet = statement.executeQuery();
         ArrayList<Fee> list = new ArrayList<>();
@@ -741,7 +759,7 @@ public class DbContext
         return array;
     }
 
-    public Fee[] getStationeryFees(ScholarPeriod period, EducationLevel level) throws SQLException
+    public Fee[] getStationeryFees(String periodCode, String levelCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
             "c.codigo AS feeId, " +
@@ -761,8 +779,8 @@ public class DbContext
             "WHERE ce.codigo = ? AND ne.codigo = ?";
 
         var statement = getConnection().prepareStatement(sqlQuery);
-        statement.setString(1, period.code);
-        statement.setString(2, level.code);
+        statement.setString(1, periodCode);
+        statement.setString(2, levelCode);
 
         var resultSet = statement.executeQuery();
         ArrayList<Fee> list = new ArrayList<>();
@@ -790,7 +808,7 @@ public class DbContext
         return array;
     }
 
-    public Fee[] getUniformFees(ScholarPeriod period, EducationLevel level) throws SQLException
+    public Fee[] getUniformFees(String periodCode, String levelCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
             "c.codigo AS feeId, " +
@@ -813,8 +831,8 @@ public class DbContext
             "WHERE ce.codigo = ? AND ne.codigo = ?";
 
         var statement = getConnection().prepareStatement(sqlQuery);
-        statement.setString(1, period.code);
-        statement.setString(2, level.code);
+        statement.setString(1, periodCode);
+        statement.setString(2, levelCode);
 
         var resultSet = statement.executeQuery();
         ArrayList<Fee> list = new ArrayList<>();
@@ -844,7 +862,7 @@ public class DbContext
         return array;
     }
 
-    public Fee[] getSpecialEventFees(ScholarPeriod period) throws SQLException
+    public Fee[] getSpecialEventFees(String periodCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
             "c.codigo AS feeId, " +
@@ -861,7 +879,7 @@ public class DbContext
             "WHERE ce.codigo = ?";
 
         var statement = getConnection().prepareStatement(sqlQuery);
-        statement.setString(1, period.code);
+        statement.setString(1, periodCode);
 
         var resultSet = statement.executeQuery();
         ArrayList<Fee> list = new ArrayList<>();
@@ -886,7 +904,7 @@ public class DbContext
         return array;
     }
 
-    public Fee getMaintenanceFee(ScholarPeriod period) throws SQLException
+    public Fee getMaintenanceFee(String periodCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
             "c.codigo AS feeId, " +
@@ -903,7 +921,7 @@ public class DbContext
             "LIMIT 1"; // Solo se requiere un elemento
 
         var statement = getConnection().prepareStatement(sqlQuery);
-        statement.setString(1, period.code);
+        statement.setString(1, periodCode);
 
         var resultSet = statement.executeQuery();
         Fee fee = null;
@@ -924,6 +942,140 @@ public class DbContext
         return fee;
     }
 
+    // Nuevas consultas
+
+    /**
+     * Verifica si un estudiante necesita pagar inscripción
+     * @param studentId Matricula de estudiante
+     * @return
+     * @throws SQLException
+     */
+    public boolean checkForEnrollmentNeeded(String studentId) throws SQLException
+    {
+        // Obtiene el próximo ciclo escolar
+        var period = getNextPeriod();
+
+        // Verifica si el resultado obtenido es nulo, en ese caso se debe a que
+        // aun falta mucho para que termine el ciclo escolar actual o que el 
+        // siguiente ciclo todavía no es registrado
+        if (period == null)
+        {
+            // Obtiene el ciclo escolar actual
+            period = getCurrentPeriod();
+        }
+
+        String sqlQuery = "SELECT " +
+            "COUNT(p.folio) = 0 AS enrollmentRequired " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "WHERE a.matricula = ? AND ce.codigo = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        statement.setString(2, period.code);
+        var resultSet = statement.executeQuery();
+        
+        resultSet.next();
+        return resultSet.getBoolean("enrollmentRequired");
+    }
+
+    /**
+     * Obtiene el ciclo escolar actual.
+     * @return
+     */
+    public ScholarPeriod getCurrentPeriod() throws SQLException
+    {
+        // Busca el ciclo escolar cuyo intervalo de fechas sea valio para la
+        // fecha actual
+        String sqlQuery = "SELECT " +
+            "ce.codigo AS code, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate " +
+            "FROM ciclos_escolares AS ce " +
+            "WHERE ce.fechaInicio <= CURRENT_DATE() AND " +
+            "ce.fechaFin > CURRENT_DATE()";
+
+        var statement = getConnection().createStatement();
+        var resultSet = statement.executeQuery(sqlQuery);
+        ScholarPeriod result = null;
+
+        if (resultSet.next())
+        {
+            result = new ScholarPeriod();
+            result.code = resultSet.getString("code");
+            result.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            result.endingDate = resultSet.getDate("endingDate").toLocalDate();
+        }
+
+        return result;
+    }
+
+    /**
+     * Obtiene el próximo ciclo escolar.
+     * @return
+     */
+    public ScholarPeriod getNextPeriod() throws SQLException
+    {
+        // Busca el ciclo escolar cuya fecha de inicio aun no llega pero no es
+        // mayor a dos meses partiendo de la fecha actual
+        String sqlQuery = "SELECT " +
+            "ce.codigo AS code, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate " +
+            "FROM ciclos_escolares AS ce " +
+            "WHERE ce.fechaInicio > CURRENT_DATE() AND " +
+            "ce.fechaInicio <= DATE_ADD(CURRENT_DATE(), INTERVAL 2 MONTH) " +
+            "LIMIT 1";
+
+        var statement = getConnection().createStatement();
+        var resultSet = statement.executeQuery(sqlQuery);
+        ScholarPeriod result = null;
+
+        if (resultSet.next())
+        {
+            result = new ScholarPeriod();
+            result.code = resultSet.getString("code");
+            result.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            result.endingDate = resultSet.getDate("endingDate").toLocalDate();
+        }
+
+        return result;
+    }
+
+    /**
+     * Obtiene el grupo actual de un alumno.
+     * @param studentId Matricula del alumno
+     * @return
+     * @throws SQLException
+     */
+    public Group getStudentCurrentGroup(String studentId) throws SQLException
+    {
+        // Obtiene la lista de grupos del estudiante
+        var groups = getStudentGroups(studentId);
+        // Obtiene el ciclo escolar actual
+        var currentPeriod = getCurrentPeriod();
+
+        if (currentPeriod != null)
+        {
+            for (Group group : groups) 
+            {
+                if (group.period.code.equals(currentPeriod.code))
+                {
+                    return group;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtiene el objeto de conexión con la base de datos.
+     * @return Objeto Connection
+     */
     private Connection getConnection()
     {
         return wrapper.getConnection();

@@ -54,6 +54,7 @@ public class AppContext
             new GroupQueryPanel(this),
             new FeeQueryPanel(this),
             new ControlPanel(this),
+            new PaymentRegistrationPanel(this)
         };
 
         // Registra las instancias de los paneles en el HashMap

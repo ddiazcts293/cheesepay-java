@@ -4,7 +4,6 @@ import java.time.Month;
 
 import com.axolutions.AppContext;
 import com.axolutions.db.type.*;
-import com.axolutions.db.type.fee.*;
 import com.axolutions.util.Menu;
 
 public class FeeQueryPanel extends BasePanel
@@ -149,7 +148,7 @@ public class FeeQueryPanel extends BasePanel
             // Bloque para intentar obtener el cobro
             try
             {
-                fee = dbContext.getEnrollmentFee(period, level);
+                fee = dbContext.getEnrollmentFee(period.code, level.code);
             }
             catch (Exception e)
             {
@@ -216,7 +215,7 @@ public class FeeQueryPanel extends BasePanel
             // Bloque para intentar obtener los cobros
             try
             {
-                fees = dbContext.getMonthlyFees(period, level);
+                fees = dbContext.getMonthlyFees(period.code, level.code);
             }
             catch (Exception e)
             {
@@ -301,7 +300,7 @@ public class FeeQueryPanel extends BasePanel
             // Bloque para intentar obtener los cobros
             try
             {
-                fees = dbContext.getUniformFees(period, level);
+                fees = dbContext.getUniformFees(period.code, level.code);
             }
             catch (Exception e)
             {
@@ -390,7 +389,7 @@ public class FeeQueryPanel extends BasePanel
             // Bloque para intentar obtener los cobros de papeleria
             try
             {
-                fees = dbContext.getStationeryFees(period, level);
+                fees = dbContext.getStationeryFees(period.code, level.code);
             }
             catch (Exception e)
             {
@@ -467,7 +466,7 @@ public class FeeQueryPanel extends BasePanel
         // Bloque para intentar obtener el cobro de mantenimiento
         try
         {
-            fee = dbContext.getMaintenanceFee(period);
+            fee = dbContext.getMaintenanceFee(period.code);
         }
         catch (Exception e)
         {
@@ -522,7 +521,7 @@ public class FeeQueryPanel extends BasePanel
         // Bloque para intentar obtener los cobros
         try
         {
-            fees = dbContext.getSpecialEventFees(period);
+            fees = dbContext.getSpecialEventFees(period.code);
         }
         catch (Exception e)
         {

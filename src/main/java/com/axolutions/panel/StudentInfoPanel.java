@@ -47,57 +47,18 @@ public class StudentInfoPanel extends BasePanel
         // Declara una variable para almacenar al alumno
         Student student = null;
 
-        // Verifica si el objeto transferido es del tipo Alumno
+        // Verifica si se ha transferido un objeto del tipo Alumno desde otro
+        // panel
         if (args.getObj() instanceof Student)
         {
             // Si es así, se convierte y asigna el objeto transferido
             student = (Student)args.getObj();
         }
+        // De lo contrario,
         else
         {
-            // De lo contrario, inicia un bucle para repetir la búsqueda de un
-            // alumno por medio de su matricula
-            do
-            {
-                // Solicita al usuario que ingrese la matricula de un alumno
-                String studentId = console.readString(
-                    "Ingrese la matricula del alumno (5 caracteres)",
-                    5);
-
-                // Bloque para intentar obtener al alumno
-                try
-                {
-                    // Realiza una consulta en la base de datos
-                    student = dbContext.getStudent(studentId);
-                }
-                catch (Exception e)
-                {
-                    // Avisa al usuario de que hubo un error
-                    System.out.println("Error al intentar consultar datos");
-                }
-
-                // Verifica si no se estableció un objeto alumno
-                if (student == null)
-                {
-                    // De ser así, crea un nuevo menú para preguntar si se desea
-                    // volver a intentar
-                    String title = "No se pudo localizar la matricula\n\n" +
-                        "¿Desea volver a intentarlo?";
-
-                    // Muestra el menú y espera por una opción
-                    String option = showYesNoMenu(title);
-
-                    // Verifica si la opción selecciona es "No"
-                    if (option.equalsIgnoreCase("n"))
-                    {
-                        // Termina el bucle
-                        break;
-                    }
-                }
-
-            // El bucle deberá ejecutarse mientras no se haya seleccionado un
-            // alumno
-            } while (student == null);
+            // Solicita que se ingrese la matricula del alumno para buscarlo
+            student = getStudentById();
         }
 
         // Verifica que se haya establecido un objeto Alumno
@@ -106,17 +67,17 @@ public class StudentInfoPanel extends BasePanel
             // Crea un nuevo menú y le añade algunas opciones
             String option;
             Menu menu = createMenu();
-            menu.addItem("r", "Registrar pago");
-            menu.addItem("i", "Ver informacion personal");
-            menu.addItem("t", "Gestionar tutores registrados");
-            menu.addItem("g", "Ver grupos en los que ha estado");
-            menu.addItem("h", "Consultar historial de pagos");
-            menu.addItem("v", "Volver al menú principal");
+            menu.addItem("R", "Registrar pago");
+            menu.addItem("I", "Ver informacion personal");
+            menu.addItem("T", "Gestionar tutores registrados");
+            menu.addItem("H", "Consultar historial de pagos");
+            menu.addItem("V", "Volver al menú principal");
 
             // Inicia un bucle
             do
             {
-                // Crea una cadena formateada con el nombre del alumno
+                // Crea una cadena formateada con la matricula y el nombre del
+                // alumno
                 String studentInfo = String.format(
                     "Alumno: %s - %s %s %s",
                     student.studentId,
@@ -133,23 +94,19 @@ public class StudentInfoPanel extends BasePanel
                 // Procesa la opción escogida
                 switch (option)
                 {
+                    // Registrar pago
+                    case "R":
+                        goTo(Location.PaymentRegistrationPanel, student);
+                        break;
                     // Ver información
-                    case "i":
                     case "I":
                         showStudentInfo(student);
                         break;
                     // Gestionar tutores
-                    case "t":
                     case "T":
                         manageStudentTutors(student);
                         break;
-                    // Ver grupos
-                    case "g":
-                    case "G":
-                        showStudentGroups(student);
-                        break;
                     // Consultar historial de pagos
-                    case "h":
                     case "H":
                         showStudentPayments(student);
                         break;
@@ -166,6 +123,63 @@ public class StudentInfoPanel extends BasePanel
     }
 
     /**
+     * Obtiene a un alumno por su matricula.
+     * @return Objeto con la información del alumno o nulo si se canceló el
+     * proceso
+     */
+    private Student getStudentById()
+    {
+        // Declara una variable para almacernar el alumno una vez encontrado
+        Student student = null;
+
+        // Bucle para repetir la búsqueda de un alumno por medio de su matricula
+        do
+        {
+            // Solicita al usuario que ingrese la matricula de un alumno
+            String studentId = console.readString(
+                "Ingrese la matricula del alumno (5 caracteres)",
+                0,
+                5);
+
+            // Bloque para intentar obtener al alumno
+            try
+            {
+                // Realiza una consulta en la base de datos
+                student = dbContext.getStudent(studentId);
+            }
+            catch (Exception e)
+            {
+                // Avisa al usuario de que hubo un error
+                System.out.println("Error al intentar consultar datos");
+            }
+
+            // Verifica si no se obtuvo a un alumno
+            if (student == null)
+            {
+                // De ser así, crea un nuevo menú para preguntar si se desea
+                // volver a intentar
+                String title = "No se pudo localizar la matricula\n\n" +
+                    "¿Desea volver a intentarlo?";
+
+                // Muestra el menú y espera por una opción
+                String option = showYesNoMenu(title);
+
+                // Verifica si la opción selecciona es "No"
+                if (option.equalsIgnoreCase("n"))
+                {
+                    // Termina el bucle
+                    break;
+                }
+            }
+
+        // El bucle deberá ejecutarse mientras no se haya seleccionado a un
+        // alumno
+        } while (student == null);
+
+        return student;
+    }
+
+    /**
      * Muestra la información de un alumno.
      * @param student Objeto con la información de un alumno
      */
@@ -177,12 +191,40 @@ public class StudentInfoPanel extends BasePanel
         // Bucle que permite repetir y actualizar el menú
         do
         {
-            // Crea una cadena de texto formateada con la información del alumno
-            String info = String.format("Información de alumno\n\n" +
+            // Imprime la información del alumno
+            System.out.printf("\nInformación general de alumno\n" +
                 "Matricula: %s\n" +
                 "Nombre: %s\n" +
                 "Apellido paterno: %s\n" +
-                "Apellido materno: %s\n" +
+                "Apellido materno: %s\n",
+                student.studentId,
+                student.name,
+                student.firstSurname,
+                student.lastSurname != null ? student.lastSurname : "N/A");
+
+            // Intenta obtener el grupo actual del alumno
+            try 
+            {
+                var group = dbContext.getStudentCurrentGroup(student.studentId);
+            
+                System.out.printf("\nEscolaridad\n" +
+                    "Grupo: %d-%s\n" +
+                    "Nivel educativo: %s\n" +
+                    "Ciclo escolar: %d-%d\n",
+                    group.grade,
+                    group.letter,
+                    group.level.description,
+                    group.period.startingDate.getYear(),
+                    group.period.endingDate.getYear());
+            } 
+            catch (Exception e) 
+            {
+                System.out.println(
+                    "Error al intentar obtener la información del grupo " +
+                    "actual del alumno");
+            }
+
+            System.err.printf("\nInformación personal" +
                 "Genero: %s\n" +
                 "Edad: %s años\n" +
                 "Fecha de nacimiento: %s\n" +
@@ -191,11 +233,7 @@ public class StudentInfoPanel extends BasePanel
                 "Calle: %s\n" +
                 "Numero: %s\n" +
                 "Colonia: %s\n" +
-                "Código Postal: %s\n",
-                student.studentId,
-                student.name,
-                student.firstSurname,
-                student.lastSurname != null ? student.lastSurname : "N/A",
+                "Código Postal: %s\n\n",
                 student.gender,
                 student.age,
                 student.dateOfBirth,
@@ -206,48 +244,88 @@ public class StudentInfoPanel extends BasePanel
                 student.addressDistrict,
                 student.addressPostalCode);
 
-            // Bloque para intentar obtener a los tutores registrados del alumno
+            // Intenta obtener a los tutores registrados con el alumno
             try
             {
-                // Declara un arreglo para almacenar los tutores de un alumno
-                // consultados en la base de datos
                 Tutor tutors[] = dbContext.getStudentTutors(student.studentId);
 
                 // Añade una sección para mostrar los tutores registrados
-                info += "\nTutores registrados:";
+                System.out.println("Tutores registrados");
+                
+                // Imprime la tabla de tutores
+                console.printAsTable(
+                    "Parentesco|Nombre|Correo electrónico|RFC",
+                    tutors);
+            }
+            catch (Exception e)
+            {
+                System.out.println(
+                    "Error al intentar obtener los tutores asociados con el " +
+                    "alumno");
+            }
 
-                // Bucle que recorre el arreglo de tutores obtenidos
-                for (var tutor : tutors)
+            // Intenta obtener los grupos en los que el alumno ha estado
+            try
+            {
+                Group[] groups = dbContext.getStudentGroups(student.studentId);
+
+                // Verifica si el alumno ha estado en algún grupo
+                if (groups.length > 0)
                 {
-                    // Agrega la información del tutur al texto de información
-                    info += "\n" + tutor.toString()
-                        .replace("|", " - ");
+                    // Crea un arreglo de cadenas para mostrar cada grupo
+                    String[] lines = new String[groups.length];
+
+                    // Bucle que recorre el arreglo de grupos para obtener la
+                    // información requerida de cada uno
+                    for (int i = 0; i < groups.length; i++) 
+                    {
+                        var group = groups[i];
+
+                        lines[i] = String.format(
+                            "%s|%d-%s|%d-%d", // Cadena formateada
+                            group.level.description, // Nivel educativo
+                            group.grade, // Grado
+                            group.letter, // Letra
+                            group.period.startingDate.getYear(), // Ciclo inicio
+                            group.period.endingDate.getYear()); // Ciclo fin
+                    }
+
+                    System.out.println("Groupos en los que ha estado inscrito\n");
+    
+                    console.printAsTable(
+                        "Nivel|Grupo|Ciclo escolar",
+                        lines);
+                }
+                else
+                {
+                    // De lo contrario, informa que no es el caso
+                    System.out.println(
+                        "El alumno aun no ha estado en ningún grupo");
                 }
             }
             catch (Exception e)
             {
                 // Avisa al usuario de que hubo un error
                 System.out.println(
-                    "Error al obtener tutores asociados a alumno");
+                    "Error al intentar obtener los grupos en los que ha " +
+                    "estado inscrito el alumno");
             }
 
             // Crea un menú, lo muestra y espera por una opción
-            option = createMenu(info)
-                .addItem("e", "Editar información del alumno")
-                .addItem("t", "Gestionar tutores registrados")
-                .addItem("v", "Volver al menú anterior")
+            option = createMenu()
+                .addItem("E", "Editar información del alumno")
+                .addItem("T", "Gestionar tutores registrados")
+                .addItem("V", "Volver al menú anterior")
                 .show("Seleccione una opción");
 
             // Procesa la opción escogida
             switch (option) 
             {
                 // Editar información
-                case "e":
                 case "E":
                     editStudentInfo(student);
                     break;
                 // Gestionar tutores
-                case "t":
                 case "T":
                     manageStudentTutors(student);
                     break;
@@ -256,7 +334,7 @@ public class StudentInfoPanel extends BasePanel
             }
 
         // Repite mientras no se elija "Volver"
-        } while (!option.equalsIgnoreCase("v"));
+        } while (!option.equalsIgnoreCase("V"));
     }
 
     /**
@@ -355,6 +433,8 @@ public class StudentInfoPanel extends BasePanel
      */
     private void showStudentPayments(Student student)
     {
+        // TODO: Mostrar pagos filtrados por categoria
+
         // Declara una variable para almacenar los pagos de un alumno
         Payment[] payments;
 
@@ -397,57 +477,6 @@ public class StudentInfoPanel extends BasePanel
         {
             // De lo contrario, avisa que no se han registrado pagos
             System.out.println("El alumno no tiene pagos registrados");
-        }
-    }
-
-    /**
-     * Muestra la lista de grupos en los que ha pertenecido un alumno.
-     * @param student Objeto con la información de un alumno
-     */
-    private void showStudentGroups(Student student)
-    {
-        // Declara una variable para almacenar los grupos
-        Group[] groups;
-
-        // Bloque para intentar obtener los grupos
-        try
-        {
-            // Realiza la consulta de obtención de grupos para el alumno actual
-            groups = dbContext.getStudentGroups(student.studentId);
-        }
-        catch (Exception e)
-        {
-            // Avisa al usuario de que hubo un error
-            System.out.println(
-                "Error al intentar obtener los grupos del alumno");
-            // Termina la función
-            return;
-        }
-
-        // Verifica si el alumno ha estado inscrito en algún grupo
-        if (groups.length > 0)
-        {
-            System.out.println("Groupos en los que ha estado el alumno");
-
-            // Bloque que recorre la lista de grupos obtenidos
-            for (Group group : groups)
-            {
-                // Crea una cadena de texto con la información de cada pago
-                String displayText = String.format(
-                    "%s\t%d-%s\t%s",
-                    group.level,
-                    group.grade,
-                    group.letter,
-                    group.period);
-
-                // Imprime cada registro por línea
-                System.out.println(displayText);
-            }
-        }
-        else
-        {
-            // De lo contrario, informa que no es el caso
-            System.out.println("El alumno no ha estado en ningún grupo");
         }
     }
 
@@ -533,17 +562,13 @@ public class StudentInfoPanel extends BasePanel
         Tutor tutor = null;
 
         // Pregunta si el tutor ya fue registrado anteriormente
-        String option = createMenu()
-            .setTitle("¿El tutor se encuentra registrado?")
-            .addItem("s", "Si")
-            .addItem("n", "No")
-            .show();
+        String option = showYesNoMenu(
+            "¿El tutor se encuentra registrado?");
         
         // Procesa la opción escogida
         switch (option) 
         {
             // Si
-            case "s":
             case "S":
             {
                 // Dirige al panel de búsqueda de tutor para buscarlo
@@ -556,7 +581,6 @@ public class StudentInfoPanel extends BasePanel
                 }
                 break;
             }
-            case "n":
             case "N":
             {
                 // Dirige al panel de registro para registrar a un nuevo tutor

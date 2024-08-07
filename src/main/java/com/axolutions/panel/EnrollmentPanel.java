@@ -85,7 +85,7 @@ public class EnrollmentPanel extends BasePanel
         // Recuento de tutores registrados asociados al alumno
         int registeredTutorsCount = 0;
         
-        // Bucle para permitir registrarv varios tutores con un alumno
+        // Bucle para permitir registrar a varios tutores con un alumno
         do
         {
             // Declara una variable que contiene la información del tutor
@@ -134,6 +134,15 @@ public class EnrollmentPanel extends BasePanel
                         "Error al intentar asociar el tutor con el alumno");
                 }
             }
+            // De lo contrario, verifica si la cantidad de tutores registrados 
+            // con el alumno es cero
+            else if (registeredTutorsCount == 0)
+            {
+                System.err.println("Debe registrar, al menos, a un tutor");
+                
+                // Repite el bucle
+                continue;
+            }
             
             // Muestra un menú de Si/No para preguntar si desea registrar a otro
             // tutor con el alumno
@@ -145,21 +154,10 @@ public class EnrollmentPanel extends BasePanel
                 // Termina el bucle de registro de tutores
                 break;
             }
-        }
 
-        // Indica que el bucle debe ejecutarse infinitamente
-        while (true);
+            // Indica que el bucle debe ejecutarse infinitamente
+        } while (true);
         
-        // Verifica si la cantidad de tutores registrados con el alumno es cero
-        if (registeredTutorsCount == 0)
-        {
-            System.out.println(
-                "No se ha registrado ningún tutor con el alumno\n" +
-                "Deberá registrar uno más adelante para poder realizar pagos");
-
-            console.pause("Presione ENTER para continuar...");
-        }
-
         // Retorna al panel de información de alumno
         return setLocation(Location.StudentInfoPanel, student);
     }
@@ -182,7 +180,7 @@ public class EnrollmentPanel extends BasePanel
         menu.addItem("v", "No, volver a ingresar datos");
         menu.addItem("c", "No, cancelar");
 
-        // Bucle que permite repetir la obtención de datos en caso de que el
+        // Bucle para repetir la obtención de datos en caso de que el
         // usuario lo necesite
         do
         {
@@ -265,7 +263,7 @@ public class EnrollmentPanel extends BasePanel
         menu.addItem("v", "No, volver a ingresar datos");
         menu.addItem("c", "No, cancelar");
 
-        // Bucle que permite repetir la obtención de datos en caso de que el
+        // Bucle para repetir la obtención de datos en caso de que el
         // usuario lo necesite
         do
         {
