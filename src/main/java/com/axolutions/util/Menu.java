@@ -245,7 +245,7 @@ public class Menu
         // Se ejecuta hasta que endLoop deje de ser falso
         while (!endLoop);
         // Imprime una línea en blanco
-        System.out.println();
+        //System.out.println();
         // Retorna la clave de la opción elegida
         return key;
     }

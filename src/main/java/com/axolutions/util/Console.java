@@ -109,7 +109,7 @@ public class Console
      */
     public int readInt(String prompt)
     {
-        return readInt(prompt, Integer.MIN_VALUE - 1, Integer.MAX_VALUE);
+        return readInt(prompt, Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
     /**
@@ -140,7 +140,7 @@ public class Console
         {
             try
             {
-                System.out.print(prompt + " :");
+                System.out.print(prompt + ": ");
                 result = scanner.nextInt();
                 scanner.nextLine();
             }
