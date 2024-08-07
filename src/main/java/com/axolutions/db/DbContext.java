@@ -844,6 +844,48 @@ public class DbContext
         return array;
     }
 
+    public Fee[] getSpecialEventFees(ScholarPeriod period) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "c.codigo AS feeId, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "ee.codigo AS specialEventId, " +
+            "ee.concepto AS concept, " +
+            "ee.fechaProgramada AS scheduledDate, " +
+            "ee.costo AS cost " +
+            "FROM cobros AS c " +
+            "INNER JOIN eventos_especiales AS ee ON c.eventoEspecial = ee.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "WHERE ce.codigo = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, period.code);
+
+        var resultSet = statement.executeQuery();
+        ArrayList<Fee> list = new ArrayList<>();
+
+        while (resultSet.next())
+        {
+            var fee = new Fee();
+            fee.specialEvent = new SpecialEventFee();
+            fee.code = resultSet.getString("feeId");
+            fee.period.code = resultSet.getString("period");
+            fee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            fee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            fee.specialEvent.code = resultSet.getString("specialEventId");
+            fee.specialEvent.concept = resultSet.getString("concept");
+            fee.specialEvent.scheduledDate = resultSet.getDate("scheduledDate").toLocalDate();
+            fee.specialEvent.cost = resultSet.getFloat("cost");
+            list.add(fee);
+        }
+
+        Fee[] array = new Fee[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
     public Fee getMaintenanceFee(ScholarPeriod period) throws SQLException
     {
         String sqlQuery = "SELECT " +
