@@ -137,8 +137,7 @@ public abstract class BasePanel
      * @param title Título de la tabla
      * @param header Cabecera de las columnas de la tabla
      * @return Elemento seleccionado o nulo si el arreglo no contiene elementos
-     * o si no se escogió ninguno. Si la lista contiene un solo elemento, este 
-     * es devuelto.
+     * o si no se escogió ninguno
      */
     protected <T> T selectFromList(T[] items, String title, String header)
     {
@@ -146,7 +145,7 @@ public abstract class BasePanel
         T selectedItem = null;
 
         // Verifica si la lista contiene más de un elemento
-        if (items.length > 1)
+        if (items.length > 0)
         {
             // Crea y muestra un menú
             String option = createMenu(title)
@@ -165,13 +164,6 @@ public abstract class BasePanel
                 selectedItem = items[index];
             }
         }
-        // De lo contrario, verifica si la lista contiene un solo elemento
-        else if (items.length == 1)
-        {
-            // Selecciona el primer y único elemento
-            selectedItem = items[0];
-        }
-
         else
         {
             // No hace nada más que imprimir un mensaje
