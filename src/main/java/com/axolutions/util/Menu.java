@@ -167,9 +167,6 @@ public class Menu
         // Declara la variable para indicar cuando terminar el bucle
         boolean endLoop = false;
 
-        // Imprime una línea en blanco
-        System.out.println();
-
         // Verifica si se estableció un título para el menú
         if (title != null && title.length() > 0)
         {
@@ -239,6 +236,7 @@ public class Menu
             // Bloque para intentar leer la entrada de usuario
             try
             {
+                // Lee la clave de la opción a elegir
                 key = scanner.nextLine().toUpperCase();
             }
             catch (Exception ex)
@@ -264,8 +262,7 @@ public class Menu
 
         // Se ejecuta hasta que endLoop deje de ser falso
         while (!endLoop);
-        // Imprime una línea en blanco
-        //System.out.println();
+
         // Retorna la clave de la opción elegida
         return key;
     }
