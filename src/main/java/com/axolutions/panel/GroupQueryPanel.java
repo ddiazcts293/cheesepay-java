@@ -5,7 +5,6 @@ import com.axolutions.db.type.EducationLevel;
 import com.axolutions.db.type.Group;
 import com.axolutions.db.type.ScholarPeriod;
 import com.axolutions.db.type.Student;
-import com.axolutions.util.Menu;
 
 /**
  * Representa el panel de consulta de grupos.
@@ -42,54 +41,39 @@ public class GroupQueryPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        System.out.println("Consulta de grupos");
+        System.out.println("Panel de consulta de grupos");
 
         // Declara las variables para almacenar los parametros de búsqueda
         EducationLevel selectedLevel = null;
         ScholarPeriod selectedPeriod = null;
 
-        // Crea un menú para establecer uno de los parámetros requeridos
-        String option;
-        Menu menu = createMenu("Filtrado de grupos")
-            .addItem("c", "Seleccionar ciclo escolar")
-            .addItem("n", "Seleccionar nivel educativo")
-            .addItem("v", "Volver al menú principal");
-
-        // Bucle para repetir el menú
+        // Bucle para repetir el menú de selección de nivel educativo
         do
         {
-            // Muestra el menú y espera por una opción
-            option = menu.show("Seleccione una opción");
-            // Procesa la opción escogida
-            switch (option)
+            selectedLevel = selectEducationLevel();
+            // Verifica si no se seleccionó un nivel educativo
+            if (selectedLevel == null)
             {
-                // Niveles educativos
-                case "n":
-                case "N":
-                    selectedLevel = selectEducationLevel();
-                    break;
-                // Ciclos escolares
-                case "c":
-                case "C":
-                    selectedPeriod = selectScholarPeriod();
-                    break;
-                // Otra opción, en este caso "Volver"
-                default:
-                    return null;
+                // Termina el bucle
+                break;
             }
 
-            // Verifica si tanto nivel como periodo fueron seleccionados
-            if (selectedLevel != null && selectedPeriod != null)
+            // Bucle para repetir el menú de selección de ciclo escolar
+            do
             {
-                // Muestra los grupos
+                selectedPeriod = selectScholarPeriod();
+                // Verifica si no se seleccionó un ciclo escolar
+                if (selectedPeriod == null)
+                {
+                    // Termina el bucle
+                    break;
+                }
+
                 showGroups(selectedLevel, selectedPeriod);
-                // Reestablece los parámetros
-                selectedLevel = null;
-                selectedPeriod = null;
-            }
-
-        // Indica que el bucle se ejecutará infinitamente
+            } while (true);
         } while (true);
+
+        return null;
     }
 
     /**
@@ -102,7 +86,7 @@ public class GroupQueryPanel extends BasePanel
         // Declara una variable para almacenar los grupos
         Group[] groups;
 
-        // Bloque para intentar obtener los grupos
+        // Intenta obtener los grupos
         try
         {
             groups = dbContext.getGroups(period.code, level.code);
@@ -117,8 +101,8 @@ public class GroupQueryPanel extends BasePanel
 
         // Crea una cadena de texto para la cabecera del menú
         String title = String.format(
-            "Mostrando grupos para %s en el ciclo escolar %d-%d\n\n" +
-            "Seleccione un grupo para obtener un listado de los alumnos",
+            "\nMostrando grupos para %s en el ciclo escolar %d-%d\n" +
+            "Seleccione un grupo para obtener la lista de alumnos en él",
             level.description,
             period.startingDate.getYear(),
             period.endingDate.getYear());
@@ -139,7 +123,7 @@ public class GroupQueryPanel extends BasePanel
 
             // Muestra los alumnos del grupo
             showGroupStudents(selectedGroup);
-        
+
         // Indica que el bucle se ejecutará infinitamente
         } while (true);
     }
@@ -154,13 +138,13 @@ public class GroupQueryPanel extends BasePanel
         do
         {
             // Crea una cadena de texto formateada con la información del grupo
-            String info = String.format("Información de grupo\n\n" +
+            String info = String.format("\nInformación de grupo\n" +
                 "Identificador: %d\n" +
                 "Grado: %d\n" +
                 "Letra: %s\n" +
-                "Periodo escolar: %d-%d\n" + 
-                "Fecha de inicio de curso: %s\n" +
-                "Fecha de fin de curso: %s\n" +
+                "Ciclo escolar: %d-%d\n" +
+                "Fecha de inicio del ciclo escolar: %s\n" +
+                "Fecha de fin del ciclo escolar: %s\n" +
                 "Cantidad de alumnos: %d\n\n" +
                 "Seleccione a un alumno o elija una acción a realizar",
                 group.number,
@@ -175,7 +159,7 @@ public class GroupQueryPanel extends BasePanel
             // Declara una variable para almacenar los alumnos del grupo actual
             Student[] students;
 
-            // Bloque para intentar obtener los alumnos del grupo
+            // Intenta obtener los alumnos del grupo
             try
             {
                 students = dbContext.getGroupStudents(group);
@@ -190,8 +174,8 @@ public class GroupQueryPanel extends BasePanel
                 students = new Student[0];
             }
 
-            // Muestra un menú para seleccionar un solo alumno
-            var student = selectFromList(students, info, 
+            // Muestra un menú para seleccionar a un solo alumno
+            var student = selectFromList(students, info,
                 "[#] - Matricula|Nombre completo|Género|CURP");
 
             // Verifica no se ha seleccionado un alumno
@@ -203,8 +187,8 @@ public class GroupQueryPanel extends BasePanel
 
             // Navega hacia la pantalla de información de alumno pasando el
             // objeto con la informació del alumno seleccionado
-            goTo(Location.StudentInfoPanel, student);
-            
+            goTo(Location.InfoPanel, student);
+
         // Repite el bucle infinitamente
         } while (true);
     }
