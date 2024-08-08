@@ -41,7 +41,7 @@ public class SearchPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        System.out.println("Panel de búsqueda");
+        System.out.println("Panel de búsqueda\n");
 
         // Verifica si el panel es llamado desde otro panel
         if (args.getObj() instanceof SearchType)
@@ -71,17 +71,44 @@ public class SearchPanel extends BasePanel
             }
         }
 
-        // De lo contrario, dirige al búsqueda de alumnos
-        var student = searchStudent();
+        String option = createMenu("¿A quién desea buscar?")
+            .addItem("A", "Alumno")
+            .addItem("T", "Tutor")
+            .addItem("C", "Cancelar")
+            .show();
 
-        // Verifica si se pudo localizar a un alumno
-        if (student != null)
+        switch (option) 
         {
-            // Dirige al panel de información de alumno
-            return setLocation(Location.StudentInfoPanel, student);
+            case "A":
+            {   
+                // Dirige a búsqueda de alumnos
+                var student = searchStudent();
+                
+                // Verifica si se pudo localizar a un alumno
+                if (student != null)
+                {
+                    // Dirige al panel de información de alumno
+                    return setLocation(Location.InfoPanel, student);
+                }
+                break;
+            }
+            case "T":
+            {
+                // Realiza la búsqueda de un tutor
+                var tutor = searchTutor();
+                // Verifica si se pudo localizar a un tutor
+                if (tutor != null)
+                {
+                    // Dirige al panel de información de tutor
+                    return setLocation(Location.InfoPanel, tutor);
+                }
+                break;
+            }
+            default:
+                break;
         }
 
-        // Retorna nulo
+        // Retorna nulo si no se buscó nada
         return null;
     }
 
@@ -98,19 +125,33 @@ public class SearchPanel extends BasePanel
         do
         {
             // Imprime información
-            String info = "\nBuscar a un alumno\n" +
+            System.out.println("\nBuscar a un alumno\n" +
                 "Puede ingresar un término que corresponda a un nombre, " +
-                "apellido o CURP\n";
-            System.out.println(info);
+                "apellido o CURP de un alumno\n");
 
             // Solicita un término de búsqueda
             String text = console.readString("Texto");
             System.out.println();
 
-            // Verifica que la longitud de la cadena ingresada sea mayor que 0
+            // Codigo temporal solo para actualizar cierta información de la 
+            // base de datos
+            if (text.equalsIgnoreCase("xxxxx"))
+            {
+                try
+                {
+                    dbContext.updateDbSchema();
+                }
+                catch (Exception ex)
+                {
+                    System.out.println(ex.getMessage());
+                }
+                continue;
+            }
+
+            // Verifica si la longitud de la cadena ingresada es mayor que cero
             if (text.length() > 0)
             {
-                // Bloque para intentar buscar
+                // Intentar buscar
                 try
                 {
                     // Obtiene una lista de coincidencias
@@ -125,7 +166,7 @@ public class SearchPanel extends BasePanel
                     else
                     {
                         // De lo contrario, muestra un mensaje
-                        System.out.println("La busqueda no arrojó resultados");
+                        System.out.println("La búsqueda no arrojó resultados");
                     }
                 }
                 catch (Exception e)
@@ -140,7 +181,7 @@ public class SearchPanel extends BasePanel
             if (student == null)
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
-                String option = showYesNoMenu("¿Desea continuar buscando?");
+                String option = showYesNoMenu("\n¿Desea seguir buscando?");
 
                 // Verifica si la opción escogida es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -170,16 +211,16 @@ public class SearchPanel extends BasePanel
         do
         {
             // Imprime información
-            String info = "\nBuscar a un tutor\n" +
+            System.out.println("\nBuscar a un tutor\n" +
                 "Puede ingresar un término que corresponda a un nombre, " +
-                "apellido, RFC o correo electrónico\n";
-            System.out.println(info);
+                "apellido, RFC o correo electrónico\n");
 
             // Solicita un término de búsqueda
             String text = console.readString("Texto");
+            System.out.println();
 
-            // Verifica que la longitud de la cadena ingresada sea mayor que 0
-            if (text.length() != 0)
+            // Verifica si la longitud de la cadena ingresada es mayor que 0
+            if (text.length() > 0)
             {
                 // Bloque para intentar buscar
                 try
@@ -196,7 +237,7 @@ public class SearchPanel extends BasePanel
                     else
                     {
                         // De lo contrario, muestra un mensaje
-                        System.out.println("La busqueda no arrojo resultados");
+                        System.out.println("La búsqueda no arrojo resultados");
                     }
                 }
                 catch (Exception e)
@@ -211,7 +252,7 @@ public class SearchPanel extends BasePanel
             if (tutor == null)
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
-                String option = showYesNoMenu("¿Desea continuar buscando?");
+                String option = showYesNoMenu("\n¿Desea seguir buscando?");
 
                 // Verifica si la opción escogida es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -236,7 +277,7 @@ public class SearchPanel extends BasePanel
     private Student selectStudent(Student[] students)
     {
         // Crea una cadena de texto para mostrar como cabecera del menú
-        String title = "Alumnos encontrados: " + students.length + "\n\n" +
+        String title = "Alumnos encontrados: " + students.length + "\n" +
             "Seleccione a un alumno o elija una acción a realizar";
      
         // Crea un nuevo menú, lo muestra y espera por una opción
@@ -252,7 +293,7 @@ public class SearchPanel extends BasePanel
     private Tutor selectTutor(Tutor[] tutors)
     {
         // Crea una cadena de texto para mostrar como cabecera
-        String title = "Tutores encontrados: " + tutors.length + "\n\n" +
+        String title = "Tutores encontrados: " + tutors.length + "\n" +
             "Seleccione a un tutor o elija una acción a realizar";
 
         // Crea un nuevo menú, lo muestra y espera por una opción
