@@ -4,10 +4,15 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.time.LocalDate;
 
 import com.axolutions.db.type.*;
 import com.axolutions.db.type.fee.*;
 
+/**
+ * Reprenta la clase que se encarga de manejar la conexión con la base de datos
+ * y la realización de consultas para obtener o manipular información.
+ */
 public class DbContext
 {
     private DbConnectionWrapper wrapper;
@@ -341,7 +346,7 @@ public class DbContext
             "ne.codigo AS code, " +
             "ne.descripcion AS description " +
             "FROM niveles_educativos AS ne";
-        
+
         var statement = getConnection().createStatement();
         var resultSet = statement.executeQuery(sqlQuery);
 
@@ -476,7 +481,7 @@ public class DbContext
             "ce.fechaInicio AS startingDate, " +
             "ce.fechaFin AS endingDate " +
             "FROM ciclos_escolares AS ce";
-        
+
         var statement = getConnection().createStatement();
         var resultSet = statement.executeQuery(sqlQuery);
 
@@ -653,7 +658,7 @@ public class DbContext
     {
         var items = getEnrollmentFees(periodCode);
 
-        for (Fee fee : items) 
+        for (Fee fee : items)
         {
             if (fee.enrollment.code.equals(levelCode))
             {
@@ -956,7 +961,7 @@ public class DbContext
         var period = getNextPeriod();
 
         // Verifica si el resultado obtenido es nulo, en ese caso se debe a que
-        // aun falta mucho para que termine el ciclo escolar actual o que el 
+        // aun falta mucho para que termine el ciclo escolar actual o que el
         // siguiente ciclo todavía no es registrado
         if (period == null)
         {
@@ -977,7 +982,7 @@ public class DbContext
         statement.setString(1, studentId);
         statement.setString(2, period.code);
         var resultSet = statement.executeQuery();
-        
+
         resultSet.next();
         return resultSet.getBoolean("enrollmentRequired");
     }
@@ -1060,7 +1065,7 @@ public class DbContext
 
         if (currentPeriod != null)
         {
-            for (Group group : groups) 
+            for (Group group : groups)
             {
                 if (group.period.code.equals(currentPeriod.code))
                 {
@@ -1071,6 +1076,579 @@ public class DbContext
 
         return null;
     }
+
+    public PaidFee[] getPaidEnrollmentFees(String studentId) throws SQLException
+    {
+        ArrayList<PaidFee> list = new ArrayList<>();
+
+        String sqlQuery = "SELECT " +
+            "p.folio AS paymentFolio, " +
+            "p.fecha AS paymentDate, " +
+            "i.costo AS cost, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
+            "ne.codigo AS educationLevel, " +
+            "ne.descripcion AS educationLevelDescription, " +
+            "ce.codigo AS periodCode, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "t.numero AS tutorNumber, " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN inscripciones AS i ON i.codigo = c.inscripcion " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN niveles_educativos AS ne ON i.nivel = ne.codigo " +
+            "INNER JOIN tutores AS t ON p.tutor = t.numero " +
+            "WHERE a.matricula = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next())
+        {
+            var paidFee = new PaidFee();
+            paidFee.type = FeeType.Enrollment;
+            paidFee.paymentFolio = resultSet.getInt("paymentFolio");
+            paidFee.date = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.cost = resultSet.getFloat("cost");
+            paidFee.studentId = resultSet.getString("studentId");
+            paidFee.studentName = resultSet.getString("studentName");
+            paidFee.tutorNumber = resultSet.getInt("tutorNumber");
+            paidFee.tutorName = resultSet.getString("tutorName");
+            paidFee.level.code = resultSet.getString("educationLevel");
+            paidFee.level.description = resultSet.getString("educationLevelDescription");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+
+            list.add(paidFee);
+        }
+
+        PaidFee[] array = new PaidFee[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    public PaidFee[] getPaidMonthlyFees(String studentId, String periodCode) throws SQLException
+    {
+        ArrayList<PaidFee> list = new ArrayList<>();
+
+        String sqlQuery = "SELECT " +
+            "p.folio AS paymentFolio, " +
+            "p.fecha AS paymentDate, " +
+            "m.costo AS cost, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
+            "m.mes AS month, " +
+            "ne.codigo AS educationLevel, " +
+            "ne.descripcion AS educationLevelDescription, " +
+            "ce.codigo AS periodCode, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "t.numero AS tutorNumber, " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN mensualidades AS m ON m.codigo = c.mensualidad " +
+            "INNER JOIN niveles_educativos AS ne ON m.nivel = ne.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN tutores AS t ON p.tutor = t.numero " +
+            "WHERE a.matricula = ? && ce.codigo = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        statement.setString(2, periodCode);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next())
+        {
+            var paidFee = new PaidFee();
+            paidFee.type = FeeType.Monthly;
+            paidFee.paymentFolio = resultSet.getInt("paymentFolio");
+            paidFee.date = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.cost = resultSet.getFloat("cost");
+            paidFee.concept = Integer.toString(resultSet.getInt("month"));
+            paidFee.studentId = resultSet.getString("studentId");
+            paidFee.studentName = resultSet.getString("studentName");
+            paidFee.tutorNumber = resultSet.getInt("tutorNumber");
+            paidFee.tutorName = resultSet.getString("tutorName");
+            paidFee.level.code = resultSet.getString("educationLevel");
+            paidFee.level.description = resultSet.getString("educationLevelDescription");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+
+            list.add(paidFee);
+        }
+
+        PaidFee[] array = new PaidFee[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    public int registerPayment(
+        String studentId,
+        int tutorId,
+        LocalDate date,
+        float totalAmount,
+        Fee[] fees) throws SQLException
+    {
+        int paymentFolio;
+
+        // Paso 1. Registrar un pago
+        String sqlQuery = "INSERT INTO pagos VALUES (DEFAULT,?,?,?,?)";
+
+        var statement1 = getConnection().prepareStatement(
+            sqlQuery,
+            java.sql.Statement.RETURN_GENERATED_KEYS);
+
+        statement1.setDate(1, Date.valueOf(date));
+        statement1.setFloat(2, totalAmount);
+        statement1.setString(3, studentId);
+        statement1.setInt(4, tutorId);
+
+        statement1.executeUpdate();
+        var resultSet = statement1.getGeneratedKeys();
+
+        resultSet.next();
+        paymentFolio = resultSet.getInt(1);
+
+        // Paso 2. Registrar los cobros de un pago
+        sqlQuery = "INSERT INTO detalles_pago VALUES\n";
+        for (int i = 0; i < fees.length; i++)
+        {
+            var item = fees[i];
+
+            sqlQuery += String.format("(%d,'%s')\n", paymentFolio, item.code);
+
+            if (i != fees.length - 1)
+            {
+                sqlQuery += ",";
+            }
+        }
+
+        var statement2 = getConnection().createStatement();
+        statement2.executeUpdate(sqlQuery);
+
+        return paymentFolio;
+    }
+
+    public void updateDbSchema() throws SQLException
+    {
+        String sqlQuery;
+        boolean mesColumnExists = false;
+        boolean fechaLimiteColumnExists = false;
+        
+        // Paso 1
+        System.out.println("Actualizando fechas de ciclos escolares");
+        var statement = getConnection().createStatement();
+
+        statement.addBatch("UPDATE ciclos_escolares " +
+            "SET fechaFin = '2022-08-22' " +
+            "WHERE ciclos_escolares.codigo = '02122'");
+        statement.addBatch("UPDATE ciclos_escolares " +
+            "SET fechaFin = '2023-08-21' " +
+            "WHERE ciclos_escolares.codigo = '02223'");
+        statement.addBatch("UPDATE ciclos_escolares " +
+            "SET fechaFin = '2024-08-19' " +
+            "WHERE ciclos_escolares.codigo = '02324'");
+
+        statement.executeBatch();
+
+        // Paso 2
+        System.out.println("Borrando columna mes en Mensualidades");
+
+        statement = getConnection().createStatement();
+        sqlQuery = "SELECT COUNT(*) > 0 " +
+            "FROM information_schema.columns " +
+            "WHERE table_schema = 'SistemaEscolar' " +
+            "AND table_name = 'mensualidades' " + 
+            "AND column_name = 'mes';";
+
+        var resultSet = statement.executeQuery(sqlQuery);
+        if (resultSet.next())
+        {
+            mesColumnExists = resultSet.getBoolean(1);
+        }
+
+        if (mesColumnExists)
+        {
+            sqlQuery = "ALTER TABLE mensualidades DROP `mes`;";
+            statement = getConnection().createStatement();
+            statement.execute(sqlQuery);
+        }
+        else
+        {
+            System.out.println("La columna no existe");
+        }
+
+        // Paso 3
+        System.out.println("Creando columna fechaLimite en mensualidades");
+
+        statement = getConnection().createStatement();
+        sqlQuery = "SELECT COUNT(*) > 0 " +
+            "FROM information_schema.columns " +
+            "WHERE table_schema = 'SistemaEscolar' " +
+            "AND table_name = 'mensualidades' " + 
+            "AND column_name = 'fechaLimite';";
+
+        resultSet = statement.executeQuery(sqlQuery);
+        if (resultSet.next())
+        {
+            fechaLimiteColumnExists = resultSet.getBoolean(1);
+        }
+
+        if (!fechaLimiteColumnExists)
+        {
+            sqlQuery = "ALTER TABLE `mensualidades` \n" +
+                "ADD `fechaLimite` DATE NOT NULL AFTER `codigo`;";
+            
+            statement = getConnection().createStatement();
+            statement.execute(sqlQuery);
+        }
+        else
+        {
+            System.out.println("La columna existe");
+        }
+
+        // Paso 4
+        System.out.println("Insertando datos nuevos");
+        statement = getConnection().createStatement();
+        
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-01-01'\n" + //
+            "WHERE codigo = 'PRE-21-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-01-01'\n" + //
+            "WHERE codigo = 'PRE-22-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-01-01'\n" + //
+            "WHERE codigo = 'SEC-22-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-01-01'\n" + //
+            "WHERE codigo = 'PRE-23-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-01-01'\n" + //
+            "WHERE codigo = 'PRI-23-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-01-01'\n" + //
+            "WHERE codigo = 'PRI-21-5';");
+        statement.addBatch("UPDATE mensualidades\n" +
+            "SET fechaLimite = '2024-01-01'\n" + //
+            "WHERE codigo = 'SEC-23-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-01-01'\n" + //
+            "WHERE codigo = 'SEC-21-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-01-01'\n" + //
+            "WHERE codigo = 'PRI-22-5';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-02-01'\n" + //
+            "WHERE codigo = 'PRI-23-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-02-01'\n" + //
+            "WHERE codigo = 'PRE-22-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-02-01'\n" + //
+            "WHERE codigo = 'PRI-22-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-02-01'\n" + //
+            "WHERE codigo = 'SEC-22-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-02-01'\n" + //
+            "WHERE codigo = 'SEC-21-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-02-01'\n" + //
+            "WHERE codigo = 'PRE-21-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-02-01'\n" + //
+            "WHERE codigo = 'PRE-23-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-02-01'\n" + //
+            "WHERE codigo = 'SEC-23-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-02-01'\n" + //
+            "WHERE codigo = 'PRI-21-6';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-03-01'\n" + //
+            "WHERE codigo = 'PRE-23-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-03-01'\n" + //
+            "WHERE codigo = 'PRI-23-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-03-01'\n" + //
+            "WHERE codigo = 'PRI-22-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-03-01'\n" + //
+            "WHERE codigo = 'SEC-21-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-03-01'\n" + //
+            "WHERE codigo = 'PRI-21-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-03-01'\n" + //
+            "WHERE codigo = 'SEC-22-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-03-01'\n" + //
+            "WHERE codigo = 'PRE-21-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-03-01'\n" + //
+            "WHERE codigo = 'SEC-23-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-03-01'\n" + //
+            "WHERE codigo = 'PRE-22-7';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-04-01'\n" + //
+            "WHERE codigo = 'PRI-21-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-04-01'\n" + //
+            "WHERE codigo = 'PRE-23-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-04-01'\n" + //
+            "WHERE codigo = 'SEC-22-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-04-01'\n" + //
+            "WHERE codigo = 'PRI-23-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-04-01'\n" + //
+            "WHERE codigo = 'SEC-21-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-04-01'\n" + //
+            "WHERE codigo = 'PRE-21-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-04-01'\n" + //
+            "WHERE codigo = 'PRI-22-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-04-01'\n" + //
+            "WHERE codigo = 'SEC-23-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-04-01'\n" + //
+            "WHERE codigo = 'PRE-22-8';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-05-01'\n" + //
+            "WHERE codigo = 'PRE-21-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-05-01'\n" + //
+            "WHERE codigo = 'PRI-21-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-05-01'\n" + //
+            "WHERE codigo = 'PRI-22-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-05-01'\n" + //
+            "WHERE codigo = 'SEC-23-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-05-01'\n" + //
+            "WHERE codigo = 'PRE-22-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-05-01'\n" + //
+            "WHERE codigo = 'PRI-23-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-05-01'\n" + //
+            "WHERE codigo = 'SEC-21-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-05-01'\n" + //
+            "WHERE codigo = 'PRE-23-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-05-01'\n" + //
+            "WHERE codigo = 'SEC-22-9';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-06-01'\n" + //
+            "WHERE codigo = 'PRE-21-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-06-01'\n" + //
+            "WHERE codigo = 'PRE-23-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-06-01'\n" + //
+            "WHERE codigo = 'SEC-22-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-06-01'\n" + //
+            "WHERE codigo = 'PRI-23-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-06-01'\n" + //
+            "WHERE codigo = 'PRE-22-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-06-01'\n" + //
+            "WHERE codigo = 'PRI-22-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-06-01'\n" + //
+            "WHERE codigo = 'SEC-23-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-06-01'\n" + //
+            "WHERE codigo = 'PRI-21-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-06-01'\n" + //
+            "WHERE codigo = 'SEC-21-10';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-07-01'\n" + //
+            "WHERE codigo = 'PRI-23-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-07-01'\n" + //
+            "WHERE codigo = 'SEC-21-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-07-01'\n" + //
+            "WHERE codigo = 'SEC-22-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-07-01'\n" + //
+            "WHERE codigo = 'SEC-23-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-07-01'\n" + //
+            "WHERE codigo = 'PRE-23-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-07-01'\n" + //
+            "WHERE codigo = 'PRE-21-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-07-01'\n" + //
+            "WHERE codigo = 'PRE-22-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-07-01'\n" + //
+            "WHERE codigo = 'PRI-22-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-07-01'\n" + //
+            "WHERE codigo = 'PRI-21-11';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-08-01'\n" + //
+            "WHERE codigo = 'PRI-23-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-08-01'\n" + //
+            "WHERE codigo = 'PRI-21-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-08-01'\n" + //
+            "WHERE codigo = 'SEC-21-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-08-01'\n" + //
+            "WHERE codigo = 'PRE-21-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-08-01'\n" + //
+            "WHERE codigo = 'PRE-23-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-08-01'\n" + //
+            "WHERE codigo = 'PRI-22-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-08-01'\n" + //
+            "WHERE codigo = 'SEC-22-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-08-01'\n" + //
+            "WHERE codigo = 'PRE-22-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2024-08-01'\n" + //
+            "WHERE codigo = 'SEC-23-12';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-09-01'\n" + //
+            "WHERE codigo = 'PRE-23-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-09-01'\n" + //
+            "WHERE codigo = 'PRI-21-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-09-01'\n" + //
+            "WHERE codigo = 'PRE-21-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-09-01'\n" + //
+            "WHERE codigo = 'SEC-21-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-09-01'\n" + //
+            "WHERE codigo = 'PRI-23-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-09-01'\n" + //
+            "WHERE codigo = 'SEC-22-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-09-01'\n" + //
+            "WHERE codigo = 'PRE-22-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-09-01'\n" + //
+            "WHERE codigo = 'PRI-22-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-09-01'\n" + //
+            "WHERE codigo = 'SEC-23-1';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-10-01'\n" + //
+            "WHERE codigo = 'PRE-22-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-10-01'\n" + //
+            "WHERE codigo = 'SEC-23-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-10-01'\n" + //
+            "WHERE codigo = 'PRE-21-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-10-01'\n" + //
+            "WHERE codigo = 'SEC-22-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-10-01'\n" + //
+            "WHERE codigo = 'PRI-23-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-10-01'\n" + //
+            "WHERE codigo = 'PRI-22-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-10-01'\n" + //
+            "WHERE codigo = 'PRI-21-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-10-01'\n" + //
+            "WHERE codigo = 'SEC-21-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-10-01'\n" + //
+            "WHERE codigo = 'PRE-23-2';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-11-01'\n" + //
+            "WHERE codigo = 'SEC-22-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-11-01'\n" + //
+            "WHERE codigo = 'PRI-22-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-11-01'\n" + //
+            "WHERE codigo = 'PRE-21-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-11-01'\n" + //
+            "WHERE codigo = 'SEC-21-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-11-01'\n" + //
+            "WHERE codigo = 'PRI-23-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-11-01'\n" + //
+            "WHERE codigo = 'SEC-23-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-11-01'\n" + //
+            "WHERE codigo = 'PRE-23-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-11-01'\n" + //
+            "WHERE codigo = 'PRI-21-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-11-01'\n" + //
+            "WHERE codigo = 'PRE-22-3';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-12-01'\n" + //
+            "WHERE codigo = 'PRI-21-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-12-01'\n" + //
+            "WHERE codigo = 'SEC-22-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-12-01'\n" + //
+            "WHERE codigo = 'PRE-22-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-12-01'\n" + //
+            "WHERE codigo = 'PRE-21-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-12-01'\n" + //
+            "WHERE codigo = 'SEC-23-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2021-12-01'\n" + //
+            "WHERE codigo = 'SEC-21-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-12-01'\n" + //
+            "WHERE codigo = 'PRI-23-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2023-12-01'\n" + //
+            "WHERE codigo = 'PRE-23-4';");
+        statement.addBatch("UPDATE mensualidades\n" + //
+            "SET fechaLimite = '2022-12-01'\n" + //
+            "WHERE codigo = 'PRI-22-4';");
+        
+        statement.executeBatch();
+    }
+
 
     /**
      * Obtiene el objeto de conexión con la base de datos.

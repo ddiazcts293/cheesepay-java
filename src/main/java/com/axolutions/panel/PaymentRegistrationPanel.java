@@ -7,6 +7,7 @@ import com.axolutions.util.Menu;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.time.Month;
+import java.time.LocalDate;
 
 public class PaymentRegistrationPanel extends BasePanel
 {
@@ -101,26 +102,27 @@ public class PaymentRegistrationPanel extends BasePanel
 
         if (isNewStudent)
         {
-            registerNewStudentPayment(student, selectedTutor);
+            //registerNewStudentPayment(student, selectedTutor);
         }
         else
         {
-            registerPayment(student, selectedTutor);
+            createPayment(student, selectedTutor);
         }
 
         return null;
     }
 
     /**
-     * Registra un pago.
+     * Crea un pago.
      * @param student Alumno
      * @param tutor Tutor
      */
-    private void registerPayment(Student student, Tutor tutor)
+    private void createPayment(Student student, Tutor tutor)
     {
         HashMap<String, Fee> fees = new HashMap<>();
         ArrayList<String> feeStrings = new ArrayList<>();
 
+        LocalDate date = LocalDate.now();
         float totalAmount = 0f;
         FeeType feeType;
         String option;
@@ -163,14 +165,14 @@ public class PaymentRegistrationPanel extends BasePanel
                     {
                         String line = String.format(
                             "Inscripció para %s (%d-%d)|$%.2f",
-                            fee.monthly.level.description, // nivel
+                            fee.enrollment.level.description, // nivel
                             fee.period.startingDate.getYear(),
                             fee.period.endingDate.getYear(),
-                            fee.monthly.cost); // costo
+                            fee.enrollment.cost); // costo
 
                         fees.put(fee.code, fee);
                         feeStrings.add(line);
-                        totalAmount += fee.monthly.cost;
+                        totalAmount += fee.enrollment.cost;
                     }
                     break;
                 }
@@ -263,15 +265,59 @@ public class PaymentRegistrationPanel extends BasePanel
                     break;
             }
 
-            // Pregunta si se desea realiza otro pago
+            System.out.println();
+
+            // Imprime los cobros agregados al pago
             String header = "Concepto|Costo";
             console.printAsTable(header, feeStrings.toArray());
-            System.out.printf("Total: $%.2f", totalAmount);
 
-            option = showYesNoMenu("¿Desea agregar otro cobro?");
+            // Crea una cadena con la información del pago
+            String info = String.format("Información de pago:\n" + 
+                "Alumno: %s %s %s\n" +
+                "Tutor: %s %s %s\n" +
+                "Fecha de pago: %s\n\n" +
+                "Total: $%.2f\n",
+                student.name,
+                student.firstSurname,
+                student.lastSurname,
+                tutor.name,
+                tutor.firstSurname,
+                tutor.lastSurname,
+                date,
+                totalAmount);
+            
+            // Pregunta si se desea realiza otro pago
+            option = createMenu(info)
+                .addItem("A", "Agregar más cobros")
+                .addItem("T", "Terminar y registrar pago")
+                .addItem("C", "Cancelar")
+                .show("Seleccione una opción");
+
+            switch (option) 
+            {
+                // Terminar y tegistrar pagos
+                case "T":
+                {
+                    Fee[] array = new Fee[fees.size()];
+                    fees.values().toArray(array);
+                    registerPayment(student, tutor, date, totalAmount, array);
+                    break;
+                }
+                // Cancelar
+                case "C":
+                    // Pregunta si realmente quiere cancelar la operación
+                    option = showYesNoMenu("¿Está seguro?");
+                    if (option.equalsIgnoreCase("S"))
+                    {
+                        // Termina el proceso de registro de pagos
+                        return;
+                    }
+                default:
+                    break;
+            }
 
         // Repite el bucle mientras se elija "Si"
-        } while (option.equalsIgnoreCase("S"));
+        } while (option.equalsIgnoreCase("A"));
     }
 
     /**
@@ -279,7 +325,7 @@ public class PaymentRegistrationPanel extends BasePanel
      * @param student Alumno
      * @param tutor Tutor
      */
-    private void registerNewStudentPayment(Student student, Tutor tutor)
+    private void createNewStudentPayment(Student student, Tutor tutor)
     {
         Group[] groups;
         Group selectedGroup = null;
@@ -385,7 +431,7 @@ public class PaymentRegistrationPanel extends BasePanel
         menu.addBlankLine();
         menu.addItem("V", "Volver al menú anterior");
 
-        String option = menu.show("Seleccione una talla");
+        String option = menu.show("Seleccione un cobro de inscripción");
         if (option.equalsIgnoreCase("V"))
         {
             return null;
@@ -465,7 +511,7 @@ public class PaymentRegistrationPanel extends BasePanel
         menu.addBlankLine();
         menu.addItem("V", "Volver al menú anterior");
 
-        String option = menu.show("Seleccione una talla");
+        String option = menu.show("Seleccione un cobro de mensualidad");
         if (option.equalsIgnoreCase("V"))
         {
             return null;
@@ -736,7 +782,7 @@ public class PaymentRegistrationPanel extends BasePanel
         menu.addBlankLine();
         menu.addItem("V", "Volver al menú anterior");
 
-        String option = menu.show("Seleccione una cobro de papeleria");
+        String option = menu.show("Seleccione un evento especial");
         if (option.equalsIgnoreCase("V"))
         {
             return null;
@@ -744,6 +790,35 @@ public class PaymentRegistrationPanel extends BasePanel
 
         int index = Integer.parseInt(option);
         return fees[index];
+    }
+
+    /**
+     * Registra un pago.
+     * @param student
+     * @param tutor
+     * @param fees
+     * @return
+     */
+    private void registerPayment(
+        Student student, 
+        Tutor tutor,
+        LocalDate date,
+        float totalAmount,
+        Fee[] fees)
+    {
+        try 
+        {
+            dbContext.registerPayment(
+                student.studentId, 
+                tutor.number, 
+                date, 
+                totalAmount, 
+                fees);
+        } 
+        catch (Exception e) 
+        {
+            System.out.println("Error al registrar el pago");
+        }
     }
 
     // Funciones auxiliares
