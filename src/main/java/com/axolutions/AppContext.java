@@ -50,7 +50,7 @@ public class AppContext
             new LoginPanel(this),
             new EnrollmentPanel(this),
             new SearchPanel(this),
-            new StudentInfoPanel(this),
+            new InfoPanel(this),
             new GroupQueryPanel(this),
             new FeeQueryPanel(this),
             new ControlPanel(this),

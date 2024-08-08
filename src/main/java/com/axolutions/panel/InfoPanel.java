@@ -3,12 +3,13 @@ package com.axolutions.panel;
 import com.axolutions.AppContext;
 import com.axolutions.util.*;
 import com.axolutions.db.type.*;
+import com.axolutions.db.type.fee.FeeType;
 import com.axolutions.panel.args.SearchType;
 
 /**
  * Representa el panel de información de alumno.
  */
-public class StudentInfoPanel extends BasePanel
+public class InfoPanel extends BasePanel
 {
     /**
      * DONE: Panel de información de alumno
@@ -34,25 +35,32 @@ public class StudentInfoPanel extends BasePanel
      * Crea un nuevo objeto StudentInformationPanel
      * @param appContext Instancia del objeto AppContext
      */
-    public StudentInfoPanel(AppContext appContext)
+    public InfoPanel(AppContext appContext)
     {
-        super(appContext, Location.StudentInfoPanel);
+        super(appContext, Location.InfoPanel);
     }
 
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        System.out.println("Panel de información de alumno");
+        System.out.println("Panel de información");
 
         // Declara una variable para almacenar al alumno
         Student student = null;
 
-        // Verifica si se ha transferido un objeto del tipo Alumno desde otro
-        // panel
+        // Verifica si se ha transferido un objeto Alumno
         if (args.getObj() instanceof Student)
         {
-            // Si es así, se convierte y asigna el objeto transferido
+            // De ser así, convierte el tipo de la referencia a un objeto Alumno
             student = (Student)args.getObj();
+        }
+        // De lo contrario, verifica si se ha transferido un objeto Tutor
+        else if (args.getObj() instanceof Tutor)
+        {
+            // De ser así, convierte el tipo de referencia a un objeto Tutor
+            var tutor = (Tutor)args.getObj();
+            // Despliega la información del tutor
+            showTutorInfo(tutor);
         }
         // De lo contrario,
         else
@@ -79,7 +87,7 @@ public class StudentInfoPanel extends BasePanel
                 // Crea una cadena formateada con la matricula y el nombre del
                 // alumno
                 String studentInfo = String.format(
-                    "Alumno: %s - %s %s %s",
+                    "\nAlumno: %s - %s %s %s",
                     student.studentId,
                     student.name,
                     student.firstSurname,
@@ -129,7 +137,9 @@ public class StudentInfoPanel extends BasePanel
      */
     private Student getStudentById()
     {
-        // Declara una variable para almacernar el alumno una vez encontrado
+        System.out.println();
+
+        // Declara una variable para almacenar el alumno una vez encontrado
         Student student = null;
 
         // Bucle para repetir la búsqueda de un alumno por medio de su matricula
@@ -158,7 +168,7 @@ public class StudentInfoPanel extends BasePanel
             {
                 // De ser así, crea un nuevo menú para preguntar si se desea
                 // volver a intentar
-                String title = "No se pudo localizar la matricula\n\n" +
+                String title = "\nNo se pudo localizar la matricula\n" +
                     "¿Desea volver a intentarlo?";
 
                 // Muestra el menú y espera por una opción
@@ -224,7 +234,7 @@ public class StudentInfoPanel extends BasePanel
                     "actual del alumno");
             }
 
-            System.err.printf("\nInformación personal" +
+            System.err.printf("\nInformación personal\n" +
                 "Genero: %s\n" +
                 "Edad: %s años\n" +
                 "Fecha de nacimiento: %s\n" +
@@ -249,10 +259,8 @@ public class StudentInfoPanel extends BasePanel
             {
                 Tutor tutors[] = dbContext.getStudentTutors(student.studentId);
 
-                // Añade una sección para mostrar los tutores registrados
-                System.out.println("Tutores registrados");
-                
                 // Imprime la tabla de tutores
+                System.out.println("Tutores registrados");
                 console.printAsTable(
                     "Parentesco|Nombre|Correo electrónico|RFC",
                     tutors);
@@ -290,11 +298,9 @@ public class StudentInfoPanel extends BasePanel
                             group.period.endingDate.getYear()); // Ciclo fin
                     }
 
-                    System.out.println("Groupos en los que ha estado inscrito\n");
-    
-                    console.printAsTable(
-                        "Nivel|Grupo|Ciclo escolar",
-                        lines);
+                    // Imprime la tabla de grupos
+                    System.out.println("Grupos en los que ha estado");
+                    console.printAsTable("Nivel|Grupo|Ciclo escolar", lines);
                 }
                 else
                 {
@@ -435,6 +441,98 @@ public class StudentInfoPanel extends BasePanel
     {
         // TODO: Mostrar pagos filtrados por categoria
 
+        do 
+        {
+            PaidFee[] paidFees;
+            String[] list;
+            String header;
+
+            // Pregunta por el tipo de cobro a buscar
+            FeeType type = selectFeeType();
+            if (type == FeeType.Unknown)
+            {
+                break;
+            }
+
+            try
+            {
+                switch (type) 
+                {
+                    case Enrollment:
+                    {
+                        System.out.println("\nMostrando pagos de inscripciones");
+
+                        paidFees = dbContext.getPaidEnrollmentFees(student.studentId);
+                        header = "Folio|Fecha de pago|Nivel educativo|Ciclo escolar|Costo|Tutor";
+                        list = new String[paidFees.length];
+                        for (int i = 0; i < paidFees.length; i++) 
+                        {
+                            var item = paidFees[i];
+
+                            list[i] = String.format(
+                                "#%d|%s|%s|%d-%d|$%.2f|%s",
+                                item.paymentFolio,
+                                item.date,
+                                item.level.description,
+                                item.period.startingDate.getYear(),
+                                item.period.endingDate.getYear(),
+                                item.cost,
+                                item.tutorName);
+                        }
+
+                        console.printAsTable(header, list);
+
+                        break;
+                    }
+                    case Monthly:
+                    {
+                        var period = selectScholarPeriod();
+                        if (period != null)
+                        {
+                            System.out.printf(
+                                "\nMostrando pagos de mensualidades ciclo escolar %d-%d\n",
+                                period.startingDate.getYear(),
+                                period.endingDate.getYear());
+    
+                            paidFees = dbContext.getPaidMonthlyFees(student.studentId, period.code);
+                            header = "Folio|Fecha de pago|Mes pagado|Nivel educativo|Costo|Tutor";
+                            list = new String[paidFees.length];
+                            for (int i = 0; i < paidFees.length; i++) 
+                            {
+                                var item = paidFees[i];
+    
+                                list[i] = String.format(
+                                    "#%d|%s|%s|%s|$%.2f|%s",
+                                    item.paymentFolio,
+                                    item.date,
+                                    item.concept,
+                                    item.level.description,
+                                    item.period.startingDate.getYear(),
+                                    item.period.endingDate.getYear(),
+                                    item.cost,
+                                    item.tutorName);
+                            }
+    
+                            console.printAsTable(header, list);
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                System.out.println("Error al obtener los pagos del alumno");
+                break;
+            }
+
+            console.pause("Presione ENTER para continuar");
+
+        } while (true);
+
+        /* 
+
         // Declara una variable para almacenar los pagos de un alumno
         Payment[] payments;
 
@@ -477,7 +575,7 @@ public class StudentInfoPanel extends BasePanel
         {
             // De lo contrario, avisa que no se han registrado pagos
             System.out.println("El alumno no tiene pagos registrados");
-        }
+        }*/
     }
 
     /**
