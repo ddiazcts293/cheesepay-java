@@ -181,7 +181,7 @@ public abstract class BasePanel
     {
         // Crea un menú para seleccionar una categoría
         String selectedCategory;
-        Menu menu = createMenu("Seleccione un tipo de cobros")
+        Menu menu = createMenu("\nSeleccione un tipo de cobro")
             .addItem("I", "Inscripciones")
             .addItem("M", "Mensualidades")
             .addItem("U", "Uniformes")
@@ -235,12 +235,12 @@ public abstract class BasePanel
         }
 
         return selectFromList(levels,
-            "\nNiveles educativos",
+            "\nSeleccione un nivel educativo",
             "[#] - Descripción");
     }
 
     /**
-     * Permite selecciona un periodo escolar de una lista
+     * Permite seleccionar un periodo escolar de una lista
      * @return Objeto que representa un periodo escolar
      */
     protected ScholarPeriod selectScholarPeriod()
@@ -248,7 +248,7 @@ public abstract class BasePanel
         // Declara las variables
         ScholarPeriod[] periods;
 
-        // Bloque para intentar obtener los periodos escolares
+        // Intentar obtener los ciclos escolares
         try
         {
             periods = dbContext.getScholarPeriods();
@@ -262,9 +262,9 @@ public abstract class BasePanel
             return null;
         }
 
-        // Crea y muestra un menú
+        // Retorna la selección hecha en el menú
         return selectFromList(periods,
-            "\nCiclos escolares",
+            "\nSeleccione un ciclo escolar",
             "[#] - Ciclo|Fecha inicial|Fecha final");
     }
 }
