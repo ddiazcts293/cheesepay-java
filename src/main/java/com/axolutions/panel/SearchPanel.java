@@ -41,7 +41,7 @@ public class SearchPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        System.out.println("Panel de búsqueda\n");
+        System.out.println("Panel de búsqueda");
 
         // Verifica si el panel es llamado desde otro panel
         if (args.getObj() instanceof SearchType)
@@ -71,7 +71,7 @@ public class SearchPanel extends BasePanel
             }
         }
 
-        String option = createMenu("¿A quién desea buscar?")
+        String option = createMenu("\n¿A quién desea buscar?")
             .addItem("A", "Alumno")
             .addItem("T", "Tutor")
             .addItem("C", "Cancelar")

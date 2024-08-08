@@ -50,7 +50,7 @@ public class EnrollmentPanel extends BasePanel
         System.out.println("Panel de registro de nuevos alumnos");
 
         // Verifica si la última ubicación es el panel de información de alumnos
-        if (args.getLastLocation() == Location.StudentInfoPanel)
+        if (args.getLastLocation() == Location.InfoPanel)
         {
             // Si es así, llama a la función de registrar tutor para recabar
             // información y almacenarla en la base de datos
@@ -67,7 +67,7 @@ public class EnrollmentPanel extends BasePanel
         // Verifica si el proceso de registro fue cancelado
         if (student == null)
         {
-            System.out.println("Proceso de registro de alumno cancelado");
+            System.out.println("\nProceso de registro de alumno cancelado");
 
             // Termina el proceso
             return null;
@@ -94,7 +94,7 @@ public class EnrollmentPanel extends BasePanel
             // Muestra un menú de Si/No para preguntar si el tutor ya fue 
             // registrado
             String option = showYesNoMenu(
-                "¿El tutor del alumno ya fue registrado anteriormente?");
+                "\n¿El tutor del alumno ya fue registrado anteriormente?");
 
             // Verifica si la opción elegida es "Si"
             if (option.equalsIgnoreCase("S"))
@@ -109,7 +109,6 @@ public class EnrollmentPanel extends BasePanel
                     // Establece en la variable tutor el objeto devuelto
                     tutor = (Tutor)result;
                 }
-
             }
             // De lo contrario,
             else
@@ -138,7 +137,7 @@ public class EnrollmentPanel extends BasePanel
             // con el alumno es cero
             else if (registeredTutorsCount == 0)
             {
-                System.err.println("Debe registrar, al menos, a un tutor");
+                System.err.println("\nDebe registrar, al menos, a un tutor");
                 
                 // Repite el bucle
                 continue;
@@ -146,7 +145,7 @@ public class EnrollmentPanel extends BasePanel
             
             // Muestra un menú de Si/No para preguntar si desea registrar a otro
             // tutor con el alumno
-            option = showYesNoMenu("¿Desea registrar a otro tutor?");
+            option = showYesNoMenu("\n¿Desea registrar a otro tutor?");
             
             // Verifica si la opción elegida es "No"
             if (option.equalsIgnoreCase("N"))
@@ -159,7 +158,7 @@ public class EnrollmentPanel extends BasePanel
         } while (true);
         
         // Retorna al panel de información de alumno
-        return setLocation(Location.StudentInfoPanel, student);
+        return setLocation(Location.InfoPanel, student);
     }
 
     /**
@@ -175,7 +174,7 @@ public class EnrollmentPanel extends BasePanel
         // Crea un nuevo menú y le agrega algunas opciones
         String option;
         Menu menu = createMenu();
-        menu.setTitle("¿Desea confirmar el registro?");
+        menu.setTitle("\n¿Desea confirmar el registro?");
         menu.addItem("r", "Sí, registrar");
         menu.addItem("v", "No, volver a ingresar datos");
         menu.addItem("c", "No, cancelar");
@@ -258,7 +257,7 @@ public class EnrollmentPanel extends BasePanel
 
         // Crea un nuevo menú y le agrega algunas opciones
         Menu menu = createMenu();
-        menu.setTitle("¿Desea confirmar el registro?");
+        menu.setTitle("\n¿Desea confirmar el registro?");
         menu.addItem("r", "Sí, Registrar");
         menu.addItem("v", "No, volver a ingresar datos");
         menu.addItem("c", "No, cancelar");
