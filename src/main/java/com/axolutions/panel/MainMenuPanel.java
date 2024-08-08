@@ -30,10 +30,10 @@ public class MainMenuPanel extends BasePanel
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
         String option = createMenu()
-            .setTitle("Bienvenido, ¿qué le gustaría hacer?")
+            .setTitle("Bienvenido/a a CheesePay, ¿qué le gustaría hacer?")
             .addItem("1", "Registrar a un nuevo alumno")
             .addItem("2", "Ver información de alumno")
-            .addItem("3", "Buscar a un alumno")
+            .addItem("3", "Buscar a un alumno/tutor")
             .addItem("4", "Consultar grupos")
             .addItem("5", "Consultar costos de cobros")
             .addItem("6", "Ir a panel de control")
@@ -46,7 +46,7 @@ public class MainMenuPanel extends BasePanel
             case "1":
                 return setLocation(Location.EnrollmentPanel);
             case "2":
-                return setLocation(Location.StudentInfoPanel);
+                return setLocation(Location.InfoPanel);
             case "3":
                 return setLocation(Location.SearchPanel);
             case "4":
