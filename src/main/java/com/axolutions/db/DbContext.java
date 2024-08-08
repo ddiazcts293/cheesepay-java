@@ -6,6 +6,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.time.LocalDate;
 
+import com.axolutions.db.query.fee.PaidEnrollment;
+import com.axolutions.db.query.fee.PaidMaintenance;
+import com.axolutions.db.query.fee.PaidStationery;
+import com.axolutions.db.query.fee.PaidMonthly;
+import com.axolutions.db.query.fee.PaidSpecialEvent;
+import com.axolutions.db.query.fee.PaidUniform;
 import com.axolutions.db.type.*;
 import com.axolutions.db.type.fee.*;
 
@@ -1052,7 +1058,7 @@ public class DbContext
 
     /**
      * Obtiene el grupo actual de un alumno.
-     * @param studentId Matricula del alumno
+     * @param studentId
      * @return
      * @throws SQLException
      */
@@ -1077,30 +1083,39 @@ public class DbContext
         return null;
     }
 
-    public PaidFee[] getPaidEnrollmentFees(String studentId) throws SQLException
+    /* Nuevas consultas */
+
+    /**
+     * Obtiene las inscripciones pagadas por un alumno.
+     * @param studentId
+     * @return
+     * @throws SQLException
+     */
+    public PaidEnrollment[] getPaidEnrollmentFees(String studentId) throws SQLException
     {
-        ArrayList<PaidFee> list = new ArrayList<>();
+        ArrayList<PaidEnrollment> list = new ArrayList<>();
 
         String sqlQuery = "SELECT " +
             "p.folio AS paymentFolio, " +
             "p.fecha AS paymentDate, " +
             "i.costo AS cost, " +
-            "a.matricula AS studentId, " +
-            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
-            "ne.codigo AS educationLevel, " +
-            "ne.descripcion AS educationLevelDescription, " +
             "ce.codigo AS periodCode, " +
             "ce.fechaInicio AS startingDate, " +
             "ce.fechaFin AS endingDate, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
             "t.numero AS tutorNumber, " +
-            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName, " +
+            "c.codigo AS code, " +
+            "ne.codigo AS educationLevelCode, " +
+            "ne.descripcion AS educationLevelDescription " +
             "FROM alumnos AS a " +
             "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
             "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
             "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
             "INNER JOIN inscripciones AS i ON i.codigo = c.inscripcion " +
-            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "INNER JOIN niveles_educativos AS ne ON i.nivel = ne.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "INNER JOIN tutores AS t ON p.tutor = t.numero " +
             "WHERE a.matricula = ?";
 
@@ -1110,47 +1125,312 @@ public class DbContext
 
         while (resultSet.next())
         {
-            var paidFee = new PaidFee();
-            paidFee.type = FeeType.Enrollment;
+            var paidFee = new PaidEnrollment();
             paidFee.paymentFolio = resultSet.getInt("paymentFolio");
-            paidFee.date = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.paymentDate = resultSet.getDate("paymentDate").toLocalDate();
             paidFee.cost = resultSet.getFloat("cost");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
             paidFee.studentId = resultSet.getString("studentId");
             paidFee.studentName = resultSet.getString("studentName");
             paidFee.tutorNumber = resultSet.getInt("tutorNumber");
             paidFee.tutorName = resultSet.getString("tutorName");
-            paidFee.level.code = resultSet.getString("educationLevel");
+            paidFee.level.code = resultSet.getString("educationLevelCode");
             paidFee.level.description = resultSet.getString("educationLevelDescription");
-            paidFee.period.code = resultSet.getString("periodCode");
-            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
-            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
 
             list.add(paidFee);
         }
 
-        PaidFee[] array = new PaidFee[list.size()];
+        PaidEnrollment[] array = new PaidEnrollment[list.size()];
         list.toArray(array);
         return array;
     }
 
-    public PaidFee[] getPaidMonthlyFees(String studentId, String periodCode) throws SQLException
+    /**
+     * Obtiene los uniformes pagados por un alumno.
+     * @param studentId
+     * @return
+     * @throws SQLException
+     */
+    public PaidUniform[] getPaidUniformFees(String studentId) throws SQLException
     {
-        ArrayList<PaidFee> list = new ArrayList<>();
+        ArrayList<PaidUniform> list = new ArrayList<>();
+
+        String sqlQuery = "SELECT " +
+            "p.folio AS paymentFolio, " +
+            "p.fecha AS paymentDate, " +
+            "u.costo AS cost, " +
+            "ce.codigo AS periodCode, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
+            "t.numero AS tutorNumber, " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName, " +
+            "c.codigo AS code," +
+            "u.concepto AS concept,    " +
+            "u.talla AS size," +
+            "tu.descripcion AS uniformType, " +
+            "ne.codigo AS educationLevelCode, " +
+            "ne.descripcion AS educationLevelDescription " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN uniformes AS u ON u.codigo = c.uniforme " +
+            "INNER JOIN tipos_uniforme AS tu ON u.tipo = tu.numero " +
+            "INNER JOIN niveles_educativos AS ne ON u.nivel = ne.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN tutores AS t ON p.tutor = t.numero " +
+            "WHERE a.matricula = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next())
+        {
+            PaidUniform paidFee = new PaidUniform();
+            paidFee.paymentFolio = resultSet.getInt("paymentFolio");
+            paidFee.paymentDate = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.cost = resultSet.getFloat("cost");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            paidFee.studentId = resultSet.getString("studentId");
+            paidFee.studentName = resultSet.getString("studentName");
+            paidFee.tutorNumber = resultSet.getInt("tutorNumber");
+            paidFee.tutorName = resultSet.getString("tutorName");
+            paidFee.code = resultSet.getString("code");
+            paidFee.concept = resultSet.getString("concept");
+            paidFee.size = resultSet.getString("size");
+            paidFee.uniformType = resultSet.getString("uniformType");
+            paidFee.level.code = resultSet.getString("educationLevelCode");
+            paidFee.level.description = resultSet.getString("educationLevelDescription");
+
+            list.add(paidFee);
+        }
+
+        PaidUniform[] array = new PaidUniform[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    /**
+     * Obtiene los cobros de papelería pagados por un alumno.
+     * @param studentId
+     * @return
+     * @throws SQLException
+     */
+    public PaidStationery[] getPaidStationeryFees(String studentId) throws SQLException
+    {
+        ArrayList<PaidStationery> list = new ArrayList<>();
+
+        String sqlQuery = "SELECT " +
+            "p.folio AS paymentFolio, " +
+            "p.fecha AS paymentDate, " +
+            "pa.costo AS cost, " +
+            "ce.codigo AS periodCode, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
+            "t.numero AS tutorNumber, " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName, " +
+            "c.codigo AS code, " +
+            "pa.concepto AS concept, " +
+            "ne.codigo AS educationLevelCode, " +
+            "ne.descripcion AS educationLevelDescription " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN papeleria AS pa ON pa.codigo = c.papeleria " +
+            "INNER JOIN niveles_educativos AS ne ON pa.nivel = ne.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN tutores AS t ON p.tutor = t.numero " +
+            "WHERE a.matricula = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next())
+        {
+            PaidStationery paidFee = new PaidStationery();
+            paidFee.paymentFolio = resultSet.getInt("paymentFolio");
+            paidFee.paymentDate = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.cost = resultSet.getFloat("cost");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            paidFee.studentId = resultSet.getString("studentId");
+            paidFee.studentName = resultSet.getString("studentName");
+            paidFee.tutorNumber = resultSet.getInt("tutorNumber");
+            paidFee.tutorName = resultSet.getString("tutorName");
+            paidFee.code = resultSet.getString("code");
+            paidFee.concept = resultSet.getString("concept");
+            paidFee.level.code = resultSet.getString("educationLevelCode");
+            paidFee.level.description = resultSet.getString("educationLevelDescription");
+
+            list.add(paidFee);
+        }
+
+        PaidStationery[] array = new PaidStationery[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    /**
+     * Obtiene los cobros de mantenimiento pagados por un alumno.
+     * @param studentId
+     * @return
+     * @throws SQLException
+     */
+    public PaidMaintenance[] getPaidMaintenanceFees(String studentId) throws SQLException
+    {
+        ArrayList<PaidMaintenance> list = new ArrayList<>();
 
         String sqlQuery = "SELECT " +
             "p.folio AS paymentFolio, " +
             "p.fecha AS paymentDate, " +
             "m.costo AS cost, " +
-            "a.matricula AS studentId, " +
-            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
-            "m.mes AS month, " +
-            "ne.codigo AS educationLevel, " +
-            "ne.descripcion AS educationLevelDescription, " +
             "ce.codigo AS periodCode, " +
             "ce.fechaInicio AS startingDate, " +
             "ce.fechaFin AS endingDate, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
             "t.numero AS tutorNumber, " +
-            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName, " +
+            "c.codigo AS code, " +
+            "m.concepto AS concept " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN mantenimiento AS m ON m.numero = c.mantenimiento " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN tutores AS t ON p.tutor = t.numero " +
+            "WHERE a.matricula = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next())
+        {
+            PaidMaintenance paidFee = new PaidMaintenance();
+            paidFee.paymentFolio = resultSet.getInt("paymentFolio");
+            paidFee.paymentDate = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.cost = resultSet.getFloat("cost");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            paidFee.studentId = resultSet.getString("studentId");
+            paidFee.studentName = resultSet.getString("studentName");
+            paidFee.tutorNumber = resultSet.getInt("tutorNumber");
+            paidFee.tutorName = resultSet.getString("tutorName");
+            paidFee.code = resultSet.getString("code");
+            paidFee.concept = resultSet.getString("concept");
+
+            list.add(paidFee);
+        }
+
+        PaidMaintenance[] array = new PaidMaintenance[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    /**
+     * Obtiene los eventos especiales pagados por un alumno.
+     * @param studentId
+     * @return
+     * @throws SQLException
+     */
+    public PaidSpecialEvent[] getPaidSpecialEventFees(String studentId) throws SQLException
+    {
+        ArrayList<PaidSpecialEvent> list = new ArrayList<>();
+
+        String sqlQuery = "SELECT " +
+            "p.folio AS paymentFolio, " +
+            "p.fecha AS paymentDate, " +
+            "ee.costo AS cost, " +
+            "ce.codigo AS periodCode, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
+            "t.numero AS tutorNumber, " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName, " +
+            "c.codigo AS code, " +
+            "ee.concepto AS concept, " +
+            "ee.fechaProgramada AS scheduledDate " +
+            "FROM alumnos AS a " +
+            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
+            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
+            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
+            "INNER JOIN eventos_especiales AS ee ON ee.codigo = c.eventoEspecial " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN tutores AS t ON p.tutor = t.numero " +
+            "WHERE a.matricula = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next())
+        {
+            PaidSpecialEvent paidFee = new PaidSpecialEvent();
+            paidFee.paymentFolio = resultSet.getInt("paymentFolio");
+            paidFee.paymentDate = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.cost = resultSet.getFloat("cost");
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            paidFee.studentId = resultSet.getString("studentId");
+            paidFee.studentName = resultSet.getString("studentName");
+            paidFee.tutorNumber = resultSet.getInt("tutorNumber");
+            paidFee.tutorName = resultSet.getString("tutorName");
+            paidFee.code = resultSet.getString("code");
+            paidFee.concept = resultSet.getString("concept");
+            paidFee.scheduledDate = resultSet.getDate("scheduledDate").toLocalDate();
+
+            list.add(paidFee);
+        }
+
+        PaidSpecialEvent[] array = new PaidSpecialEvent[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    /**
+     * Obtiene las mensualidades pagadas por un alumno en un ciclo escolar.
+     * @param studentId
+     * @param periodCode
+     * @return
+     * @throws SQLException
+     */
+    public PaidMonthly[] getPaidMonthlyFees(String studentId, String periodCode) throws SQLException
+    {
+        ArrayList<PaidMonthly> list = new ArrayList<>();
+
+        String sqlQuery = "SELECT " +
+            "p.folio AS paymentFolio, " +
+            "p.fecha AS paymentDate, " +
+            "m.costo AS cost, " +
+            "ce.codigo AS periodCode, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "a.matricula AS studentId, " +
+            "CONCAT(a.nombre, ' ', a.primerApellido, IFNULL(CONCAT(' ',a.segundoApellido), '')) AS studentName, " +
+            "t.numero AS tutorNumber, " +
+            "CONCAT(t.nombre, ' ', t.primerApellido, IFNULL(CONCAT(' ',t.segundoApellido), '')) AS tutorName, " +
+            "c.codigo AS code, " +
+            "m.fechaLimite AS paidMonth, " +
+            "m.mesVacacional AS isVacationMonth," +
+            "ne.codigo AS educationLevelCode, " +
+            "ne.descripcion AS educationLevelDescription " +
             "FROM alumnos AS a " +
             "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
             "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
@@ -1159,7 +1439,7 @@ public class DbContext
             "INNER JOIN niveles_educativos AS ne ON m.nivel = ne.codigo " +
             "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
             "INNER JOIN tutores AS t ON p.tutor = t.numero " +
-            "WHERE a.matricula = ? && ce.codigo = ?";
+            "WHERE a.matricula = ? AND ce.codigo = ?";
 
         var statement = getConnection().prepareStatement(sqlQuery);
         statement.setString(1, studentId);
@@ -1168,26 +1448,65 @@ public class DbContext
 
         while (resultSet.next())
         {
-            var paidFee = new PaidFee();
-            paidFee.type = FeeType.Monthly;
+            PaidMonthly paidFee = new PaidMonthly();
             paidFee.paymentFolio = resultSet.getInt("paymentFolio");
-            paidFee.date = resultSet.getDate("paymentDate").toLocalDate();
+            paidFee.paymentDate = resultSet.getDate("paymentDate").toLocalDate();
             paidFee.cost = resultSet.getFloat("cost");
-            paidFee.concept = Integer.toString(resultSet.getInt("month"));
+            paidFee.period.code = resultSet.getString("periodCode");
+            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
             paidFee.studentId = resultSet.getString("studentId");
             paidFee.studentName = resultSet.getString("studentName");
             paidFee.tutorNumber = resultSet.getInt("tutorNumber");
             paidFee.tutorName = resultSet.getString("tutorName");
-            paidFee.level.code = resultSet.getString("educationLevel");
+            paidFee.code = resultSet.getString("code");
+            paidFee.paidMonth = resultSet.getDate("paidMonth").toLocalDate();
+            paidFee.isVacationMonth = resultSet.getBoolean("isVacationMonth");
+            paidFee.level.code = resultSet.getString("educationLevelCode");
             paidFee.level.description = resultSet.getString("educationLevelDescription");
-            paidFee.period.code = resultSet.getString("periodCode");
-            paidFee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
-            paidFee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
 
             list.add(paidFee);
         }
 
-        PaidFee[] array = new PaidFee[list.size()];
+        PaidMonthly[] array = new PaidMonthly[list.size()];
+        list.toArray(array);
+        return array;
+    }
+
+    /**
+     * Obtiene los ciclos escolares en los que un alumno ha estado.
+     * @param studentId
+     * @return
+     * @throws SQLException
+     */
+    public ScholarPeriod[] getScholarPeriods(String studentId) throws SQLException
+    {
+        ArrayList<ScholarPeriod> list = new ArrayList<>();
+        String sqlQuery = "SELECT  " +
+            "ce.codigo AS code, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate " +
+            "FROM grupos AS g " +
+            "INNER JOIN ciclos_escolares AS ce ON g.ciclo = ce.codigo " +
+            "INNER JOIN grupos_alumnos AS ga ON g.numero = ga.grupo " +
+            "INNER JOIN alumnos AS a ON ga.alumno = a.matricula " +
+            "WHERE a.matricula = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+
+        while (resultSet.next()) 
+        {
+            var period = new ScholarPeriod();
+            period.code = resultSet.getString("code");
+            period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+
+            list.add(period);
+        }
+
+        ScholarPeriod[] array = new ScholarPeriod[list.size()];
         list.toArray(array);
         return array;
     }
