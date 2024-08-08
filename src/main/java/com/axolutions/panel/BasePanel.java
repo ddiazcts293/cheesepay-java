@@ -167,7 +167,7 @@ public abstract class BasePanel
         else
         {
             // No hace nada más que imprimir un mensaje
-            System.out.println("No hay nada que seleccionar");
+            System.out.println("\nNo hay elementos disponibles");
         }
 
         return selectedItem;
@@ -235,7 +235,7 @@ public abstract class BasePanel
         }
 
         return selectFromList(levels,
-            "Niveles educativos",
+            "\nNiveles educativos",
             "[#] - Descripción");
     }
 
@@ -264,7 +264,7 @@ public abstract class BasePanel
 
         // Crea y muestra un menú
         return selectFromList(periods,
-            "Ciclos escolares",
+            "\nCiclos escolares",
             "[#] - Ciclo|Fecha inicial|Fecha final");
     }
 }
