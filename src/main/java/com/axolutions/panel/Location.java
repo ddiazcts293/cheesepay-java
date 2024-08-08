@@ -9,7 +9,7 @@ public enum Location
     EnrollmentPanel,
     PaymentRegistrationPanel,
     SearchPanel,
-    StudentInfoPanel,
+    InfoPanel,
     GroupQueryPanel,
     FeeQueryPanel,
     ControlPanel
