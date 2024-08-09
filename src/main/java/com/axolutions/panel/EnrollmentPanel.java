@@ -93,7 +93,7 @@ public class EnrollmentPanel extends BasePanel
 
             // Muestra un menú de Si/No para preguntar si el tutor ya fue 
             // registrado
-            String option = showYesNoMenu(
+            String option = helper.showYesNoMenu(
                 "\n¿El tutor del alumno ya fue registrado anteriormente?");
 
             // Verifica si la opción elegida es "Si"
@@ -145,7 +145,7 @@ public class EnrollmentPanel extends BasePanel
             
             // Muestra un menú de Si/No para preguntar si desea registrar a otro
             // tutor con el alumno
-            option = showYesNoMenu("\n¿Desea registrar a otro tutor?");
+            option = helper.showYesNoMenu("\n¿Desea registrar a otro tutor?");
             
             // Verifica si la opción elegida es "No"
             if (option.equalsIgnoreCase("N"))
@@ -173,7 +173,7 @@ public class EnrollmentPanel extends BasePanel
         
         // Crea un nuevo menú y le agrega algunas opciones
         String option;
-        Menu menu = createMenu();
+        Menu menu = helper.createMenu();
         menu.setTitle("\n¿Desea confirmar el registro?");
         menu.addItem("r", "Sí, registrar");
         menu.addItem("v", "No, volver a ingresar datos");
@@ -225,7 +225,7 @@ public class EnrollmentPanel extends BasePanel
                 {
                     // Crea y muestra un submenú para preguntar si desea volver
                     // a ingresar los datos o si desea cancelar el registro
-                    option = createMenu()
+                    option = helper.createMenu()
                         .setTitle("Error al guardar los cambios")
                         .addItem("v", "Volver a ingresar datos")
                         .addItem("c", "Cancelar")
@@ -256,7 +256,7 @@ public class EnrollmentPanel extends BasePanel
         String option;
 
         // Crea un nuevo menú y le agrega algunas opciones
-        Menu menu = createMenu();
+        Menu menu = helper.createMenu();
         menu.setTitle("\n¿Desea confirmar el registro?");
         menu.addItem("r", "Sí, Registrar");
         menu.addItem("v", "No, volver a ingresar datos");
@@ -332,7 +332,7 @@ public class EnrollmentPanel extends BasePanel
                     
                     // Crea y muestra un submenú para preguntar si desea volver
                     // a ingresar los datos o si desea cancelar el registro
-                    option = createMenu()
+                    option = helper.createMenu()
                         .setTitle("Error al guardar los cambios")
                         .addItem("v", "Volver a ingresar datos")
                         .addItem("c", "Cancelar")

@@ -71,7 +71,7 @@ public class SearchPanel extends BasePanel
             }
         }
 
-        String option = createMenu("\n¿A quién desea buscar?")
+        String option = helper.createMenu("\n¿A quién desea buscar?")
             .addItem("A", "Alumno")
             .addItem("T", "Tutor")
             .addItem("C", "Cancelar")
@@ -181,7 +181,7 @@ public class SearchPanel extends BasePanel
             if (student == null)
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
-                String option = showYesNoMenu("\n¿Desea seguir buscando?");
+                String option = helper.showYesNoMenu("\n¿Desea seguir buscando?");
 
                 // Verifica si la opción escogida es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -252,7 +252,7 @@ public class SearchPanel extends BasePanel
             if (tutor == null)
             {
                 // De ser así, pregunta si desea volver a realizar otra búsqueda
-                String option = showYesNoMenu("\n¿Desea seguir buscando?");
+                String option = helper.showYesNoMenu("\n¿Desea seguir buscando?");
 
                 // Verifica si la opción escogida es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -281,8 +281,8 @@ public class SearchPanel extends BasePanel
             "Seleccione a un alumno o elija una acción a realizar";
      
         // Crea un nuevo menú, lo muestra y espera por una opción
-        return selectFromList(students, title,
-            "[#] - Matricula|Nombre completo|Género|CURP");
+        return helper.selectFromList(title, "[#] - Matricula|Nombre completo|Género|CURP",
+            students);
     }
 
     /**
@@ -297,7 +297,7 @@ public class SearchPanel extends BasePanel
             "Seleccione a un tutor o elija una acción a realizar";
 
         // Crea un nuevo menú, lo muestra y espera por una opción
-        return selectFromList(tutors, title,
-            "[#] - Parentesco|Nombre|Correo electronico|RFC");
+        return helper.selectFromList(title, "[#] - Parentesco|Nombre|Correo electronico|RFC",
+            tutors);
     }
 }

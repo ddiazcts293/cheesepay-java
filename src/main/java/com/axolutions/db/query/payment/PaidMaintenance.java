@@ -1,4 +1,4 @@
-package com.axolutions.db.query.fee;
+package com.axolutions.db.query.payment;
 
 public class PaidMaintenance extends PaidFee 
 {

@@ -2,7 +2,7 @@ package com.axolutions.db.type;
 
 import java.time.LocalDate;
 
-public class ScholarPeriod 
+public class SchoolPeriod 
 {
     public String code;
     public LocalDate startingDate;

@@ -1,46 +1,20 @@
+/**
+ * Panel de consulta de cobros
+ *
+ * En este panel se podrán consultar los costos de cada cobro disponible,
+ * según la categoría, ciclo escolar y nivel educativo
+ *
+ */
+
 package com.axolutions.panel;
 
-import java.time.Month;
-
 import com.axolutions.AppContext;
+import com.axolutions.db.query.payment.StudentPayment;
 import com.axolutions.db.type.*;
-import com.axolutions.util.Menu;
+import com.axolutions.db.type.fee.*;
 
 public class FeeQueryPanel extends BasePanel
 {
-    /**
-     * DOING: Panel de consulta de cobros
-     *
-     * En este panel se podrán consultar los costos de cada cobro disponible,
-     * según la categoría, ciclo escolar y nivel educativo
-     *
-     * ALGORITMO:
-     * 1. Inicio
-     * 2. Preguntar la categoría de pago, ciclo y nivel educativo (si aplica)
-     * 3. Mostrar precios de cobros
-     * 4. Fin
-     *
-     * CONSULTAS:
-     * - Obtener, consultas individuales, los listados de costos de los
-     *   cobros para cada ciclo escolar y nivel educativo.
-     *   Datos: identificador de cobro, concepto (si lo tiene), costo, fechas
-     *   de periodo escolar y descripción de nivel educativo (si lo tiene)
-     *
-     * - Obtener la cantidad de pagos realizados para cada categoria agrupado
-     *   por ciclo escolar
-     *   Datos: categoria de cobro, fechas de perido escolar, cantidad de pagos
-     *
-     * - Obtener el costo de un paquete de papeleria para un grado, nivel
-     *   educativo y ciclo escolar
-     *   Datos: identificador de cobro, concepto, grado, costo, fechas
-     *   de periodo escolar y descripción de nivel educativo
-     *
-     * - Obtener el costo de un uniforme para un nivel educativo, tipo y ciclo
-     *   escolar
-     *   Datos: identificador de cobro, concepto, talla, descripción de tipo de
-     *   uniforme, periodo escolar y nivel educativo
-     */
-
     public FeeQueryPanel(AppContext appContext)
     {
         super(appContext, Location.FeeQueryPanel);
@@ -49,74 +23,23 @@ public class FeeQueryPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        System.out.println("Consulta de cobros");
+        System.out.println("Panel de consulta de cobros");
 
-        // Crea un menú para seleccionar una categoría
-        String selectedCategory;
-        Menu menu = createMenu("Filtrado de cobros")
-            .addItem("I", "Inscripciones")
-            .addItem("M", "Mensualidades")
-            .addItem("U", "Uniformes")
-            .addItem("P", "Papelería")
-            .addItem("X", "Mantenimiento")
-            .addItem("E", "Eventos especiales")
-            .addItem("V", "Volver al menú principal");
-
-        // Bucle que repite el menú de categoría al momento de regresar desde
-        // el menú de selección de ciclo escolar
+        // Bucle para repetir el menú de categoría de pago
         do
         {
-            // Muestra el menú de seleción de categoría y espera por una opción
-            selectedCategory = menu.show("Seleccione una opción");
+            // Pregunta por el tipo de cobro a buscar
+            FeeType type = helper.selectFeeType();
 
-            // Verifica si se eligió "Volver al menú principal"
-            if (selectedCategory.equalsIgnoreCase("v"))
+            // Verifica si no se eligió ninguna categoría
+            if (type == FeeType.Unknown)
             {
-                // Termina el menú
+                // Termina el bucle del menú de categoría
                 break;
             }
 
-            // Bucle que repite el menú de selección de ciclo escolar cada vez 
-            // que se solicita regresar desde las secciones de cada categoría
-            do
-            {
-                // Solicita al usuario que seleccione un ciclo escolar
-                ScholarPeriod selectedPeriod = selectScholarPeriod();
-
-                // Verifica si no se seleccionó un ciclo
-                if (selectedPeriod == null)
-                {
-                    // De ser así, repite el ciclo y regresa al menú de categoría
-                    break;
-                }
-
-                // Procesa la opción elegida y navega hacia el menú correspondiente
-                switch (selectedCategory)
-                {
-                    case "I": // Inscripciones"
-                        showEnrollmentFees(selectedPeriod);
-                        break;
-                    case "M": // Mensualidades"
-                        showMonthlyFees(selectedPeriod);
-                        break;
-                    case "U": // Uniformes"
-                        showUniformFees(selectedPeriod);
-                        break;
-                    case "P": // Cobros de papelería"
-                        showStationeryFees(selectedPeriod);
-                        break;
-                    case "X": // Cobros de mantenimiento"
-                        showMaintenanceFees(selectedPeriod);
-                        break;
-                    case "E": // Eventos especiales"
-                        showSpecialEventsFees(selectedPeriod);
-                        break;
-                    default:
-                        break;
-                }
-            
-            // Bucle repetido infinitamente
-            } while (true);
+            // Muestra el menú de ciclo escolar
+            showSchoolPeriodMenu(type);
 
         // Bucle repetido infinitamente
         } while (true);
@@ -125,495 +48,218 @@ public class FeeQueryPanel extends BasePanel
     }
 
     /**
-     * Muestra el costo de inscripción para un ciclo escolar determinado.
-     * @param period Ciclo escolar
+     * Muestra un menú que permite seleccionar un ciclo escolar para desplegar 
+     * el listado de alumnos con un cobro específico.
+     * @param feeType Tipo de cobro
      */
-    private void showEnrollmentFees(ScholarPeriod period)
+    private void showSchoolPeriodMenu(FeeType feeType)
     {
-        // Bucle que repite el menú de selección de nivel educativo
+        String title = "\nSeleccione un cobro para mostrar el listado de " +
+            "alumnos que realizaron ese pago o elija una acción a realizar";
+
+        // Bucle para repetir el menú de ciclo escolar
         do
         {
-            // Solicita que se elija un nivel educativo
-            var level = selectEducationLevel();
-            // Verifica si no se escogió uno
-            if (level == null)
+            // Cobro seleccionado
+            Fee selectedFee = null;
+            // Solicita al usuario que seleccione un ciclo escolar
+            SchoolPeriod selectedPeriod = helper.selectSchoolPeriod();
+
+            // Verifica si no se seleccionó un ciclo
+            if (selectedPeriod == null)
             {
-                // De ser así, finaliza la función
-                return;
+                // De ser así, sale del bucle del menú de ciclo escolar
+                break;
             }
 
-            // Declara una variable para almacenar el cobro consultado
-            Fee fee = null;
-
-            // Bloque para intentar obtener el cobro
-            try
+            // Verifica si para la categoría de cobro anteriormente seleccionado
+            // corresponde a una que necesite conocer el nivel educativo
+            if (feeType == FeeType.Uniform ||
+                feeType == FeeType.Stationery ||
+                feeType == FeeType.Monthly)
             {
-                fee = dbContext.getEnrollmentFee(period.code, level.code);
+                // Muestra el menu del nivel educativo
+                showEducationLevelMenu(feeType, selectedPeriod);
             }
-            catch (Exception e)
+            else
             {
-                // Avisa del error
-                System.out.println(
-                    "Error al consultar información de cobro de inscripción");
+                do
+                {
+                    // Procesa la categoría de cobro elegida
+                    switch (feeType)
+                    {
+                        // Inscripciones
+                        case Enrollment:
+                            selectedFee = helper.selectEnrollmentFee(
+                                selectedPeriod,
+                                title);
 
-                // Termina la función
-                return;
+                            break;
+                        // Evento especial
+                        case SpecialEvent:
+                            selectedFee = helper.selectSpecialEventFee(
+                                selectedPeriod,
+                                title);
+
+                            break;
+                        // Mantenimiento
+                        case Maintenance:
+                            selectedFee = helper.selectMaintenanceFee(
+                                selectedPeriod,
+                                title);
+
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    // Muestra el listado alumnos que realizaron el pago por el 
+                    // cobro seleccionado
+                    if (selectedFee != null)
+                    {
+                        showStudentsWithPaidFee(selectedFee);
+                    }
+
+                // Repite mientras el cobro seleccionado no sea nulo
+                } while (selectedFee != null);
             }
 
-            // Verifica si no se obtuvo un cobro
-            if (fee == null || fee.enrollment == null)
-            {
-                // Avisa del error
-                System.out.println("No hay ningún cobro de inscripción disponible");
-
-                // Termina la función
-                return;
-            }
-
-            // Imprime la información del cobro
-            System.out.printf(
-                "Costos de inscripciones\n\n" +
-                "Ciclo escolar: %d-%d\n" +
-                "Fecha de inicio de curso: %s\n" +
-                "Fecha de fin de curso: %s\n" +
-                "Nivel educativo: %s\n" +
-                "Costo: $%.2f\n",
-                fee.period.startingDate.getYear(),
-                fee.period.endingDate.getYear(),
-                fee.period.startingDate,
-                fee.period.endingDate,
-                fee.enrollment.level,
-                fee.enrollment.cost);
-
-            console.pause("Presione ENTER para continuar...");
-
-        // Repite infinitamente
+        // Bucle repetido infinitamente
         } while (true);
     }
 
     /**
-     * Muestra los costos de las mensualidades para un ciclo escolar determinado.
+     * Muestra un menú que permite seleccionar un nivel educativo para desplegar 
+     * el listado de alumnos con un cobro específico.
+     * @param feeType Tipo de cobro
      * @param period Ciclo escolar
      */
-    private void showMonthlyFees(ScholarPeriod period)
+    private void showEducationLevelMenu(FeeType feeType, SchoolPeriod period)
     {
-        // Bucle que repite el menú de selección de nivel educativo
+        String title = "\nSeleccione un cobro para mostrar el listado de " +
+            "alumnos que realizaron ese pago o elija una acción a realizar";
+
+        // Bucle para repetir el menú de selección de nivel educativo
         do
         {
-            // Solicita que se elija un nivel educativo
-            var level = selectEducationLevel();
-            // Verifica si no se escogió uno
+            // Cobro seleccionado
+            Fee selectedFee = null;
+            // Solicita un nivel educativo
+            EducationLevel level = helper.selectEducationLevel();
+            
+            // Verifica si no se seleccionó un nivel educativo
             if (level == null)
             {
-                // De ser así, finaliza la función
-                return;
+                // De ser así, sale del bucle del menú de nivel educativo
+                break;
             }
 
-            // Declara una variable para almacenar los cobros
-            Fee[] fees;
-
-            // Bloque para intentar obtener los cobros
-            try
+            do
             {
-                fees = dbContext.getMonthlyFees(period.code, level.code);
-            }
-            catch (Exception e)
-            {
-                // Avisa del error
-                System.out.println("Error al consultar costos de mensualidad");
+                // Procesa el tipo de pago requerido
+                switch (feeType)
+                {
+                    // Mensualidades
+                    case Monthly:
+                        selectedFee = helper.selectMonthlyFee(
+                            period, 
+                            level, 
+                            title);
 
-                // Termina la función
-                return;
-            }
+                        break;
+                    // Uniformes
+                    case Uniform:
+                        selectedFee = helper.selectUniformFee(
+                            period, 
+                            level, 
+                            title);
 
-            // Verifica si no se obtuvieron cobros
-            if (fees.length == 0)
-            {
-                    // Avisa del error
-                    System.out.println(
-                    "No hay costos de mensualidad disponibles");
+                        break;
+                    // Papelería
+                    case Stationery:
+                        selectedFee = helper.selectStationeryFee(
+                            period, 
+                            level, 
+                            title);
 
-                // Termina la función
-                return;
-            }
+                        break;
+                    default:
+                        break;
+                }
 
-            // Crea una cabecera para la tabla
-            String header = "Mes|Es vacacional|Costo";
+                // Verifica si se seleccionó un cobro
+                if (selectedFee != null)
+                {
+                    showStudentsWithPaidFee(selectedFee);
+                }
 
-            // Crea un arreglo de cadenas para colocar cada una de los cobros
-            String[] list = new String[fees.length];
+            // Repite el bucle mientras el pago seleccionado no sea nulo
+            } while (selectedFee != null);
 
-            // Bucle que recorre la lista de cobros para crear cadenas formateadas
-            for (int i = 0; i < fees.length; i++)
-            {
-                var item = fees[i];
-
-                // Crea una cadena de texto para cada cobro
-                list[i] = String.format("%s|%s|$%.2f",
-                    getMonthName(item.monthly.month), // Mes
-                    item.monthly.isVacationMonth ? "si" : "no", // Mes vacacional
-                    item.monthly.cost); // Costo
-            }
-
-            // Imprime la información común
-            System.out.printf(
-                "Costos de mensualidades\n\n" +
-                "Ciclo escolar: %d-%d\n" +
-                "Fecha de inicio de curso: %s\n" +
-                "Fecha de fin de curso: %s\n" +
-                "Nivel educativo: %s\n",
-                period.startingDate.getYear(),
-                period.endingDate.getYear(),
-                period.startingDate,
-                period.endingDate,
-                level);
-
-            // Imprime la tabla de cobros
-            console.printAsTable(header, list);
-            console.pause("Presione ENTER para continuar...");
-
-        // Repite infinitamente
+        // El bucle se ejecuta infinitamente
         } while (true);
     }
 
     /**
-     * Muestra los costos de los uniformes para un ciclo escolar determinado.
-     * @param period Ciclo escolar
+     * Muestra el listado de alumnos que ha realizado el pago de un cobro 
+     * específico.
+     * @param fee Cobro
      */
-    private void showUniformFees(ScholarPeriod period)
+    private void showStudentsWithPaidFee(Fee fee)
     {
-        // Bucle que repite el menú de selección de nivel educativo
-        do
-        {
-            // Solicita que se elija un nivel educativo
-            var level = selectEducationLevel();
-            // Verifica si no se escogió uno
-            if (level == null)
-            {
-                // De ser así, finaliza la función
-                return;
-            }
+        // Declara un arreglo para almacenar los alumnos obtenidos
+        StudentPayment[] students;
 
-            // Declara una variable para almacenar los cobros consultados
-            Fee[] fees;
-
-            // Bloque para intentar obtener los cobros
-            try
-            {
-                fees = dbContext.getUniformFees(period.code, level.code);
-            }
-            catch (Exception e)
-            {
-                // Avisa del error
-                System.out.println(
-                    "Error al consultar costos de uniforme");
-
-                // Termina la función
-                return;
-            }
-
-            // Verifica si no se obtuvieron tarifas
-            if (fees.length == 0)
-            {
-                    // Avisa del error
-                    System.out.println(
-                    "No hay costos de uniformes disponibles");
-
-                // Termina la función
-                return;
-            }
-
-            // Crea una cabecera para la tabla
-            String header = "Concepto|Talla|Tipo de uniforme|Costo";
-
-            // Crea un arreglo de cadenas para colocar cada una de las
-            // mensualidades
-            String[] list = new String[fees.length];
-
-            // Bucle que recorre la lista de pagos para crear cadenas formateadas
-            for (int i = 0; i < fees.length; i++)
-            {
-                // Objeto con la información de cobro
-                var fee = fees[i];
-
-                // Crea una cadena de texto para cada costo
-                list[i] = String.format("%s|%s|%s|$%.2f",
-                    fee.uniform.concept, // Concepto
-                    fee.uniform.size, // Talla
-                    fee.uniform.type, // Tipo
-                    fee.uniform.cost); // Costo
-            }
-
-            // Imprime información común
-            System.out.printf(
-                "Costos de uniformes\n\n" +
-                "Ciclo escolar: %d-%d\n" +
-                "Fecha de inicio de curso: %s\n" +
-                "Fecha de fin de curso: %s\n" +
-                "Nivel educativo: %s\n",
-                period.startingDate.getYear(),
-                period.endingDate.getYear(),
-                period.startingDate,
-                period.endingDate,
-                level);
-
-            // Imprime la tabla de cobros
-            console.printAsTable(header, list);
-            console.pause("Presione ENTER para continuar...");
-
-        // Repite infinitamente
-        } while (true);
-    }
-
-    /**
-     * Muestra los costos de papelería para un ciclo escolar determinado.
-     * @param period Ciclo escolar
-     */
-    private void showStationeryFees(ScholarPeriod period)
-    {
-        // Bucle para repetir la selección de nivel educativo
-        do
-        {
-            // Solicita que se elija un nivel educativo
-            var level = selectEducationLevel();
-            // Verifica si no se escogió uno
-            if (level == null)
-            {
-                // De ser así, finaliza la función
-                return;
-            }
-
-            // Declara una variable para almacenar los cobros consultados
-            Fee[] fees;
-
-            // Bloque para intentar obtener los cobros de papeleria
-            try
-            {
-                fees = dbContext.getStationeryFees(period.code, level.code);
-            }
-            catch (Exception e)
-            {
-                // Avisa del error
-                System.out.println(
-                    "Error al consultar costos de papelería");
-
-                // Termina la función
-                return;
-            }
-
-            // Verifica si no se obtuvieron cobros
-            if (fees.length == 0)
-            {
-                // Avisa del error
-                System.out.println("No hay costos de papelería disponibles");
-
-                // Termina la función
-                return;
-            }
-
-            // Crea una cabecera para la tabla
-            String header = "Concepto|Grado|Costo";
-
-            // Crea un arreglo de cadenas para colocar cada una de las
-            // mensualidades
-            String[] list = new String[fees.length];
-
-            // Bucle que recorre la lista de pagos para crear cadenas formateadas
-            for (int i = 0; i < fees.length; i++)
-            {
-                // Objeto con la información del cobro
-                var item = fees[i];
-
-                // Crea una cadena de texto para cada costo
-                list[i] = String.format("%s|%s|$%.2f",
-                    item.stationery.concept, // Concepto
-                    item.stationery.grade, // Grado
-                    item.stationery.cost); // Costo
-            }
-
-            // Imprime información común
-            System.out.printf(
-                "Costos de papelería\n\n" +
-                "Ciclo escolar: %d-%d\n" +
-                "Fecha de inicio de curso: %s\n" +
-                "Fecha de fin de curso: %s\n" +
-                "Nivel educativo: %s\n",
-                period.startingDate.getYear(),
-                period.endingDate.getYear(),
-                period.startingDate,
-                period.endingDate,
-                level);
-
-            // Imprime la tabla de cobros 
-            console.printAsTable(header, list);
-            console.pause("Presione ENTER para continuar...");
-
-        // Repite infinitamente
-        } while (true);
-    }
-
-    /**
-     * Muestra los costos de mantenimiento para un ciclo escolar determinado.
-     * @param period
-     */
-    private void showMaintenanceFees(ScholarPeriod period)
-    {
-        System.out.println("Mantenimiento");
-
-        // Declara una variable para almacenar el cobro consultado
-        Fee fee;
-
-        // Bloque para intentar obtener el cobro de mantenimiento
         try
         {
-            fee = dbContext.getMaintenanceFee(period.code);
+            // Intenta obtener los alumnos con que han realizado el pago
+            students = dbContext.getStudentsWhoHaveAFee(fee.code);
         }
         catch (Exception e)
         {
-            // Avisa del error
             System.out.println(
-                "Error al consultar costos de mantenimiento");
+                "Error al obtener a los alumnos que han realizado el pago " +
+                "del cobro indicado");
 
             // Termina la función
             return;
         }
 
-        // Verifica si no se obtuvo un cobro de mantenimiento
-        if (fee == null || fee.maintenance == null)
+        if (students.length > 0)
         {
-                // Avisa del error
-                System.out.println(
-                "No hay costos de mantenimiento disponible");
+            // Define una cabecera para la tabla
+            String header = "Folio|Fecha de pago|Matricula|Alumno|Grupo|" +
+                "Nivel educativo|Pagador por";
+            
+            // Crea un arreglo para contener la información de cada alumno
+            String[] lines = new String[students.length];
+            // Bucle que recorre el listado de alumnos
+            for (int i = 0; i < students.length; i++)
+            {
+                var item = students[i];
 
-            // Termina la función
-            return;
+                lines[i] = String.format(
+                    "#%d|%s|%s|%s|%d-%s|%s|%s",
+                    item.paymentFolio,
+                    item.paymentDate,
+                    item.studentId,
+                    item.studentName,
+                    item.grade,
+                    item.letter,
+                    item.level.description,
+                    item.tutorName);
+            }
+
+            // Imprime la tabla de alumnos
+            System.out.println("\nListado de alumnos");
+            console.printAsTable(header, lines);
         }
-
-        String info = String.format(
-            "Costos de mantenimiento\n\n" +
-            "Ciclo escolar: %d-%d\n" +
-            "Fecha de inicio de curso: %s\n" +
-            "Fecha de fin de curso: %s\n" +
-            "Concepto: %s\n" +
-            "Costo: $%.2f\n",
-            period.startingDate.getYear(),
-            period.endingDate.getYear(),
-            period.startingDate,
-            period.endingDate,
-            fee.maintenance.concept,
-            fee.maintenance.cost);
-
-        System.out.println(info);
+        else
+        {
+            System.out.println(
+                "\nNingún alumno ha realizado el pago por el cobro indicado");
+        }
 
         console.pause("Presione ENTER para continuar...");
-    }
-
-    /**
-     * Muestra los costos de eventos especiales para un ciclo escolar 
-     * determinado.
-     * @param period
-     */
-    private void showSpecialEventsFees(ScholarPeriod period)
-    {
-        // Declara una variable para almacenar los cobros consultados
-        Fee[] fees;
-
-        // Bloque para intentar obtener los cobros
-        try
-        {
-            fees = dbContext.getSpecialEventFees(period.code);
-        }
-        catch (Exception e)
-        {
-            // Avisa del error
-            System.out.println("Error al consultar costos de eventos especiales");
-
-            // Termina la función
-            return;
-        }
-
-        // Verifica si no se obtuvieron cobros
-        if (fees.length == 0)
-        {
-            // Avisa de que no hay cobros
-            System.out.println("No hay costos de eventos especiales disponibles");
-
-            // Termina la función
-            return;
-        }
-
-        // Crea una cabecera para la tabla
-        String header = "Concepto|Fecha programada|Costo";
-
-        // Crea un arreglo de cadenas para colocar las cadenas formateadas
-        String[] list = new String[fees.length];
-
-        // Bucle que recorre la lista de cobros
-        for (int i = 0; i < fees.length; i++)
-        {
-            // Objeto con la información del cobro
-            var item = fees[i];
-
-            // Crea una cadena de texto formateada para cada costo
-            list[i] = String.format("%s|%s|$%.2f",
-                item.specialEvent.concept, // Concepto
-                item.specialEvent.scheduledDate, // Fecha programada
-                item.specialEvent.cost); // Costo
-        }
-
-        // Muestra la información común para no mostrar datos repetidos
-        System.out.printf(
-            "Costos de eventos especiales\n\n" +
-            "Ciclo escolar: %d-%d\n" +
-            "Fecha de inicio de curso: %s\n" +
-            "Fecha de fin de curso: %s\n\n",
-            period.startingDate.getYear(),
-            period.endingDate.getYear(),
-            period.startingDate,
-            period.endingDate);
-
-        // Imprime una tabla de los cobros
-        console.printAsTable(header, list);
-        console.pause("Presione ENTER para continuar...");
-    }
-
-    /* Funciones auxiliares */
-
-    /**
-     * Obtiene el nombre de un mes en español.
-     * @param month Mes
-     * @return Cadena
-     */
-    private String getMonthName(Month month)
-    {
-        switch (month)
-        {
-            case JANUARY:
-                return "enero";
-            case FEBRUARY:
-                return "febrero";
-            case MARCH:
-                return "marzo";
-            case APRIL:
-                return "abril";
-            case MAY:
-                return "mayo";
-            case JUNE:
-                return "junio";
-            case JULY:
-                return "julio";
-            case AUGUST:
-                return "agosto";
-            case SEPTEMBER:
-                return "septiembre";
-            case OCTOBER:
-                return "octubre";
-            case NOVEMBER:
-                return "noviembre";
-            case DECEMBER:
-                return "diciembre";
-            default:
-                return "";
-        }
     }
 }

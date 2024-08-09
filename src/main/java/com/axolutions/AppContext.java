@@ -21,6 +21,8 @@ public class AppContext
     private DbContext dbContext;
     // Envoltorio de la conexión con la base de datos
     private DbConnectionWrapper dbConnectionWrapper;
+    // Instancia de la clase de funciones comunes
+    private PanelHelper panelHelper;
 
     /**
      * Almacena las instancias de todas los paneles del programa basándose en
@@ -42,6 +44,7 @@ public class AppContext
         this.dbConnectionWrapper = new DbConnectionWrapper(dbConnectionString);
         this.dbContext = new DbContext(dbConnectionWrapper);
         this.panels = new HashMap<>();
+        this.panelHelper = new PanelHelper(this);
 
         // Crea un arreglo con las instancias de los paneles existentes
         BasePanel[] panelInstances = new BasePanel[]
@@ -257,6 +260,15 @@ public class AppContext
     public Console getConsole()
     {
         return console;
+    }
+
+    /**
+     * Obtiene la instancia compartida de PanelHelper
+     * @return Objeto PanelHelper
+     */
+    public PanelHelper getPanelHelper()
+    {
+        return panelHelper;
     }
 
     /**

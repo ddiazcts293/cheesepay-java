@@ -18,7 +18,7 @@ public class Student
     public String curp;
     public String ssn;
 
-    public ScholarPeriod period = new ScholarPeriod();
+    public SchoolPeriod period = new SchoolPeriod();
     public EducationLevel level = new EducationLevel();
     
     @Override

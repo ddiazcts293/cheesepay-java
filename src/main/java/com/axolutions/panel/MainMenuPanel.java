@@ -2,21 +2,11 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 
+/**
+ * Representa la clase del menú principal.
+ */
 public class MainMenuPanel extends BasePanel
 {
-    /**
-     * Menú principal
-     *
-     * Agregar los siguientes apartados como opciones del menú:
-     * - Registrar alumno
-     * - Registrar pago
-     * - Buscar tutor o alumno
-     * - Ver información de alumno
-     * - Consultar grupos
-     * - Consultar cobros
-     * - Panel de control
-     */
-
     /**
      * Crea un nuevo objeto MainMenuPanel.
      * @param appContext Instancia del objeto AppContext
@@ -29,13 +19,13 @@ public class MainMenuPanel extends BasePanel
     @Override
     public PanelTransitionArgs show(PanelTransitionArgs args)
     {
-        String option = createMenu()
+        String option = helper.createMenu()
             .setTitle("Bienvenido/a a CheesePay, ¿qué le gustaría hacer?")
             .addItem("1", "Registrar a un nuevo alumno")
             .addItem("2", "Ver información de alumno")
             .addItem("3", "Buscar a un alumno/tutor")
             .addItem("4", "Consultar grupos")
-            .addItem("5", "Consultar costos de cobros")
+            .addItem("5", "Consultar cobros y pagos")
             .addItem("6", "Ir a panel de control")
             .addItem("7", "Cambiar de cuenta")
             .addItem("8", "Salir")
@@ -58,7 +48,7 @@ public class MainMenuPanel extends BasePanel
             case "7":
                 return setLocation(Location.LoginPanel);
             default:
-                System.out.println("¡Gracias por utilizar CheesePay!");
+                System.out.println("\n¡Gracias por utilizar CheesePay!");
                 return setLocation(Location.Exit);
         }
     }

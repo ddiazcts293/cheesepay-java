@@ -3,7 +3,7 @@ package com.axolutions.panel;
 import com.axolutions.AppContext;
 import com.axolutions.db.type.EducationLevel;
 import com.axolutions.db.type.Group;
-import com.axolutions.db.type.ScholarPeriod;
+import com.axolutions.db.type.SchoolPeriod;
 import com.axolutions.db.type.Student;
 
 /**
@@ -45,12 +45,12 @@ public class GroupQueryPanel extends BasePanel
 
         // Declara las variables para almacenar los parametros de búsqueda
         EducationLevel selectedLevel = null;
-        ScholarPeriod selectedPeriod = null;
+        SchoolPeriod selectedPeriod = null;
 
         // Bucle para repetir el menú de selección de nivel educativo
         do
         {
-            selectedLevel = selectEducationLevel();
+            selectedLevel = helper.selectEducationLevel();
             // Verifica si no se seleccionó un nivel educativo
             if (selectedLevel == null)
             {
@@ -61,7 +61,7 @@ public class GroupQueryPanel extends BasePanel
             // Bucle para repetir el menú de selección de ciclo escolar
             do
             {
-                selectedPeriod = selectScholarPeriod();
+                selectedPeriod = helper.selectSchoolPeriod();
                 // Verifica si no se seleccionó un ciclo escolar
                 if (selectedPeriod == null)
                 {
@@ -81,7 +81,7 @@ public class GroupQueryPanel extends BasePanel
      * @param level Nivel educativo
      * @param period Ciclo escolar
      */
-    private void showGroups(EducationLevel level, ScholarPeriod period)
+    private void showGroups(EducationLevel level, SchoolPeriod period)
     {
         // Declara una variable para almacenar los grupos
         Group[] groups;
@@ -111,8 +111,8 @@ public class GroupQueryPanel extends BasePanel
         do
         {
             // Muestra un menú para seleccionar un solo grupo
-            var selectedGroup = selectFromList(groups, title,
-                "[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos");
+            var selectedGroup = helper.selectFromList(title, "[#] - Nivel|Grado y grupo|Periodo|Cantidad de alumnos",
+                groups);
 
             // Verifica si no se seleccionó algún elemento
             if (selectedGroup == null)
@@ -175,8 +175,8 @@ public class GroupQueryPanel extends BasePanel
             }
 
             // Muestra un menú para seleccionar a un solo alumno
-            var student = selectFromList(students, info,
-                "[#] - Matricula|Nombre completo|Género|CURP");
+            var student = helper.selectFromList(info, "[#] - Matricula|Nombre completo|Género|CURP",
+                students);
 
             // Verifica no se ha seleccionado un alumno
             if (student == null)

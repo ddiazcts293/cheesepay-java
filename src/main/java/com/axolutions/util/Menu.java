@@ -164,7 +164,7 @@ public class Menu
     {
         // Declara la variable que almacena la clave de la opción ingresada
         String key = "";
-        // Declara la variable para indicar cuando terminar el bucle
+        // Declara la variable para indicar cuándo terminar el bucle
         boolean endLoop = false;
 
         // Verifica si se estableció un título para el menú

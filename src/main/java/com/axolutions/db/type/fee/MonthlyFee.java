@@ -1,17 +1,19 @@
 package com.axolutions.db.type.fee;
 
-import java.time.Month;
+import java.time.LocalDate;
 import com.axolutions.db.type.EducationLevel;
 
 /**
  * Representa una cuota de mensualidad.
  */
-public class MonthlyFee extends BaseFee
+public class MonthlyFee extends Fee
 {
+    public String monthlyCode;
+
     /**
-     * Mes en el que aplica.
+     * Fecha límite de pago.
      */
-    public Month month;
+    public LocalDate dueDate;
 
     /**
      * Indica si la cuota corresponde a un periodo vacacional.

@@ -5,8 +5,10 @@ import java.time.LocalDate;
 /**
  * Representa un cobro por un evento especial.
  */
-public class SpecialEventFee extends BaseFee 
+public class SpecialEventFee extends Fee 
 {
+    public String specialEventCode;
+
     /**
      * Concepto.
      */

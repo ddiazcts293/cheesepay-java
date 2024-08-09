@@ -35,7 +35,7 @@ public class PaidFee
 
     public String tutorName;
 
-    public ScholarPeriod period = new ScholarPeriod();
+    public SchoolPeriod period = new SchoolPeriod();
 
     public EducationLevel level = new EducationLevel();
 }

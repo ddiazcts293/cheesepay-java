@@ -5,8 +5,10 @@ import com.axolutions.db.type.EducationLevel;
 /**
  * Representa un cobro por uniforme
  */
-public class UniformFee extends BaseFee
+public class UniformFee extends Fee
 {
+    public String uniformCode;
+    
     /**
      * Concepto.
      */

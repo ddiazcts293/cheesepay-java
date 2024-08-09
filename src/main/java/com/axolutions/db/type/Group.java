@@ -6,7 +6,7 @@ public class Group
     public int grade;
     public String letter;
 
-    public ScholarPeriod period = new ScholarPeriod();
+    public SchoolPeriod period = new SchoolPeriod();
     public EducationLevel level = new EducationLevel();
 
     public int studentCount;

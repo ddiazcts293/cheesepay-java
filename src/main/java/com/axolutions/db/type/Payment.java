@@ -27,7 +27,7 @@ public class Payment
     /**
      * Ciclo escolar.
      */
-    public ScholarPeriod period = new ScholarPeriod();
+    public SchoolPeriod period = new SchoolPeriod();
 
     /**
      * Representa una lista de cobros pagados.

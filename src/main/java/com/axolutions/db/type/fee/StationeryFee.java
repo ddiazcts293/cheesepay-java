@@ -5,8 +5,10 @@ import com.axolutions.db.type.EducationLevel;
 /**
  * Representa una couta por gastos de papelería.
  */
-public class StationeryFee extends BaseFee
+public class StationeryFee extends Fee
 {
+    public String starioneryCode;
+
     /**
      * Concepto.
      */

@@ -5,8 +5,10 @@ import com.axolutions.db.type.EducationLevel;
 /**
  * Representa una couta de inscripción.
  */
-public class EnrollmentFee extends BaseFee
+public class EnrollmentFee extends Fee
 {
+    public String enrollmentCode;
+
     /**
      * Nivel educativo
      */

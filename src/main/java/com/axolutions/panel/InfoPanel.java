@@ -2,12 +2,7 @@ package com.axolutions.panel;
 
 import com.axolutions.AppContext;
 import com.axolutions.util.*;
-import com.axolutions.db.query.fee.PaidEnrollment;
-import com.axolutions.db.query.fee.PaidMaintenance;
-import com.axolutions.db.query.fee.PaidMonthly;
-import com.axolutions.db.query.fee.PaidSpecialEvent;
-import com.axolutions.db.query.fee.PaidStationery;
-import com.axolutions.db.query.fee.PaidUniform;
+import com.axolutions.db.query.payment.*;
 import com.axolutions.db.type.*;
 import com.axolutions.db.type.fee.FeeType;
 import com.axolutions.panel.args.SearchType;
@@ -80,7 +75,7 @@ public class InfoPanel extends BasePanel
         {
             // Crea un nuevo menú y le añade algunas opciones
             String option;
-            Menu menu = createMenu();
+            Menu menu = helper.createMenu();
             menu.addItem("R", "Registrar pago");
             menu.addItem("I", "Ver informacion personal del alumno");
             menu.addItem("T", "Gestionar tutores registrados");
@@ -180,7 +175,7 @@ public class InfoPanel extends BasePanel
                     "¿Desea volver a intentarlo?";
 
                 // Muestra el menú y espera por una opción
-                String option = showYesNoMenu(title);
+                String option = helper.showYesNoMenu(title);
 
                 // Verifica si la opción selecciona es "No"
                 if (option.equalsIgnoreCase("n"))
@@ -220,26 +215,29 @@ public class InfoPanel extends BasePanel
                 student.firstSurname,
                 student.lastSurname != null ? student.lastSurname : "N/A");
 
-            // Intenta obtener el grupo actual del alumno
             try
             {
+                // Intenta obtener el grupo actual del alumno
                 var group = dbContext.getStudentCurrentGroup(student.studentId);
 
-                System.out.printf("\nEscolaridad\n" +
-                    "Grupo: %d-%s\n" +
-                    "Nivel educativo: %s\n" +
-                    "Ciclo escolar: %d-%d\n",
-                    group.grade,
-                    group.letter,
-                    group.level.description,
-                    group.period.startingDate.getYear(),
-                    group.period.endingDate.getYear());
+                // Verifica si el grupo actual no es nulo
+                if (group != null)
+                {
+                    System.out.printf(
+                        "Grupo: %d-%s\n" +
+                        "Nivel educativo: %s\n" +
+                        "Ciclo escolar: %d-%d\n",
+                        group.grade,
+                        group.letter,
+                        group.level.description,
+                        group.period.startingDate.getYear(),
+                        group.period.endingDate.getYear());
+                }
             }
             catch (Exception e)
             {
-                //System.out.println(
-                  //  "Error al intentar obtener la información del grupo " +
-                    //"actual del alumno");
+                System.out.println(
+                    "Error al intentar obtener el grupo actual del alumno");
             }
 
             System.err.printf("\nInformación personal\n" +
@@ -326,25 +324,15 @@ public class InfoPanel extends BasePanel
             }
 
             // Crea un menú, lo muestra y espera por una opción
-            option = createMenu()
+            option = helper.createMenu()
                 .addItem("E", "Editar información del alumno")
-                .addItem("T", "Gestionar tutores registrados")
                 .addItem("V", "Volver al menú anterior")
                 .show("Seleccione una opción");
 
-            // Procesa la opción escogida
-            switch (option)
+            // Verifica si la opción elegida es "Editar"
+            if (option.equalsIgnoreCase("E"))
             {
-                // Editar información
-                case "E":
-                    editStudentInfo(student);
-                    break;
-                // Gestionar tutores
-                case "T":
-                    manageStudentTutors(student);
-                    break;
-                default:
-                    break;
+                editStudentInfo(student);
             }
 
         // Repite mientras no se elija "Volver"
@@ -366,7 +354,7 @@ public class InfoPanel extends BasePanel
         String addressPostalCode;
 
         // Crea un menú y le añade algunas opciones
-        Menu menu = createMenu("¿Continuar?")
+        Menu menu = helper.createMenu("¿Continuar?")
             .addItem("a", "Si, actualizar")
             .addItem("v", "No, volver a ingresar datos")
             .addItem("c", "No, cancelar");
@@ -453,7 +441,7 @@ public class InfoPanel extends BasePanel
         do
         {
             // Pregunta por el tipo de cobro a buscar
-            FeeType type = selectFeeType();
+            FeeType type = helper.selectFeeType();
             // Procesa el tipo de cobro
             switch (type)
             {
@@ -477,6 +465,7 @@ public class InfoPanel extends BasePanel
                 case SpecialEvent:
                     showStudentPaidSpecialEventFees(student);
                     break;
+                // Mantenimiento
                 case Maintenance:
                     showStudentPaidMaintenanceFees(student);
                     break;
@@ -882,10 +871,10 @@ public class InfoPanel extends BasePanel
      * @param studentId Matricula del alumno
      * @return
      */
-    private ScholarPeriod selectScholarPeriod(String studentId)
+    private SchoolPeriod selectScholarPeriod(String studentId)
     {
         // Declara las variables
-        ScholarPeriod[] periods;
+        SchoolPeriod[] periods;
 
         try
         {
@@ -909,9 +898,9 @@ public class InfoPanel extends BasePanel
         }
 
         // Retorna la selección hecha en el menú
-        return selectFromList(periods,
-            "\nSeleccione un ciclo escolar",
-            "[#] - Ciclo|Fecha inicial|Fecha final");
+        return helper.selectFromList("\nSeleccione un ciclo escolar",
+            "[#] - Ciclo|Fecha inicial|Fecha final",
+            periods);
     }
 
     /* Información de tutores */
@@ -951,7 +940,7 @@ public class InfoPanel extends BasePanel
 
             // Crea un nuevo menú, lo muestra y espera a que el usuario
             // seleccione una opción
-            String option = createMenu(title)
+            String option = helper.createMenu(title)
                 .setHeader("[#] - Parentesco|Nombre|Correo electronico|RFC")
                 .addItems(tutors) // Agrega la lista de tutores al menú
                 .addItem("a", "Agregar a un tutor")
@@ -998,7 +987,7 @@ public class InfoPanel extends BasePanel
         Tutor tutor = null;
 
         // Pregunta si el tutor ya fue registrado anteriormente
-        String option = showYesNoMenu(
+        String option = helper.showYesNoMenu(
             "¿El tutor se encuentra registrado?");
 
         // Procesa la opción escogida
@@ -1067,7 +1056,7 @@ public class InfoPanel extends BasePanel
         do
         {
             // Crea un menú y le añade algunas opciones
-            Menu menu = createMenu()
+            Menu menu = helper.createMenu()
                 .addItem("e", "Editar correo eléctronico")
                 .addItem("a", "Agregar número telefónico");
 
@@ -1198,7 +1187,7 @@ public class InfoPanel extends BasePanel
     private void removeTutorPhone(Tutor tutor)
     {
         // Crea un menú vacío para mostrar los números de teléfono registrados
-        Menu menu = createMenu();
+        Menu menu = helper.createMenu();
 
         // Bucle que repite el menú una y otra vez mientras el tutor tenga al
         // menos un número de teléfono

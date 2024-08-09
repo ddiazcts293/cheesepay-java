@@ -1,15 +1,15 @@
-package com.axolutions.db.query.fee;
+package com.axolutions.db.query.payment;
 
 import java.time.LocalDate;
-import com.axolutions.db.type.ScholarPeriod;
+import com.axolutions.db.type.SchoolPeriod;
 
-public abstract class PaidFee 
+public class PaidFee 
 {
     public int paymentFolio;
     public String code;
     public LocalDate paymentDate;
     public float cost;
-    public ScholarPeriod period = new ScholarPeriod();
+    public SchoolPeriod period = new SchoolPeriod();
 
     public String studentId;
     public String studentName;

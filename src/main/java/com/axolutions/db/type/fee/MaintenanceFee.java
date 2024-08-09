@@ -3,12 +3,12 @@ package com.axolutions.db.type.fee;
 /**
  * Representa una couta de mantenimiento.
  */
-public class MaintenanceFee extends BaseFee
+public class MaintenanceFee extends Fee
 {
     /**
      * Número.
      */
-    public int number;
+    public int maintenanceNumber;
 
     /**
      * Concepto.
