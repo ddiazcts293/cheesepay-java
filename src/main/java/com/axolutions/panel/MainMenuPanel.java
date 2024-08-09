@@ -26,9 +26,9 @@ public class MainMenuPanel extends BasePanel
             .addItem("3", "Buscar a un alumno/tutor")
             .addItem("4", "Consultar grupos")
             .addItem("5", "Consultar cobros y pagos")
-            .addItem("6", "Ir a panel de control")
-            .addItem("7", "Cambiar de cuenta")
-            .addItem("8", "Salir")
+            //.addItem("7", "Ir a panel de control")
+            .addItem("6", "Cambiar de cuenta")
+            .addItem("X", "Salir del programa")
             .show();
 
         switch (option)
@@ -44,7 +44,7 @@ public class MainMenuPanel extends BasePanel
             case "5":
                 return setLocation(Location.FeeQueryPanel);
             case "6":
-                return setLocation(Location.ControlPanel);
+                //return setLocation(Location.ControlPanel);
             case "7":
                 return setLocation(Location.LoginPanel);
             default:

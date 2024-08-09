@@ -6,10 +6,7 @@ import com.axolutions.db.type.fee.*;
 import com.axolutions.util.Menu;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.time.Month;
-import java.time.Period;
-import java.time.LocalDate;
+import java.time.*;
 
 public class PaymentRegistrationPanel extends BasePanel
 {
@@ -47,7 +44,6 @@ public class PaymentRegistrationPanel extends BasePanel
     {
         System.out.println("Panel de registro de pagos");
 
-        boolean isNewStudent = false;
         Student student = null;
         Tutor selectedTutor = null;
         Group group = null;
@@ -73,9 +69,6 @@ public class PaymentRegistrationPanel extends BasePanel
 
             // Intenta obtener el grupo actual del estudiante
             group = dbContext.getStudentCurrentGroup(student.studentId);
-
-            // Intenta averiguar si el alumno debe pagar inscripción
-            isNewStudent = dbContext.isNewStudent(student.studentId);
         }
         catch (Exception e)
         {
@@ -123,17 +116,12 @@ public class PaymentRegistrationPanel extends BasePanel
         }
         // Si no, verifica si el alumno es de nuevo ingreso, es decir, si no ha
         // estado en algún grupo antes
-        else if (isNewStudent)
+        else
         {
             // Crea un nuevo pago para un alumno de nuevo ingreso
             createPaymentForNewStudent(student, selectedTutor);
         }
-        else
-        {
 
-        }
-
-        // Termina la función indicando que deberá volver al panel anterior
         return null;
     }
 
@@ -225,7 +213,8 @@ public class PaymentRegistrationPanel extends BasePanel
 
             // Muestra el menú y espera por una opción
             option = menu.show(
-                "Elija un cobro para borarlo o una acción a realizar");
+                "Elija un cobro para borrarlo de la lista o escoja una " +
+                "acción a realizar");
 
             // Verifica si la opción elegida es "Agregar cobro"
             if (option.equalsIgnoreCase("A"))
@@ -298,9 +287,13 @@ public class PaymentRegistrationPanel extends BasePanel
         SchoolPeriod currentPeriod = null;
         Group group = null;
         int grade, maxGrade;
+        boolean isNewStudent;
 
         try
         {
+            // Intenta averiguar si el alumno es nuevo ingreso
+            isNewStudent = dbContext.isNewStudent(student.studentId);
+
             // Intenta obtener el ciclo actual
             // currentPeriod = dbContext.getCurrentPeriod();
             // Por ahora, se selecciona de una lista
@@ -341,16 +334,47 @@ public class PaymentRegistrationPanel extends BasePanel
         catch (Exception e)
         {
             System.out.println(
-                "Error al obtener la información de los ciclos escolares");
+                "Error al obtener la información del alumno");
             
             // Finaliza la función
             return;
         }
 
-        System.out.printf(
-            "\nRegistro de pagos para un alumno de nuevo ingreso\n" +
-            "Ciclo escolar: %s\n",
-            currentPeriod.getPeriodString());
+        if (isNewStudent)
+        {
+            System.out.printf(
+                "\nRegistro de pagos para un alumno de nuevo ingreso\n" +
+                "Ciclo escolar: %s\n",
+                currentPeriod.getPeriodString());
+        }
+        else
+        {
+            Group lastGroup = null;
+            
+            try 
+            {
+                lastGroup = dbContext.getStudentLastGroup(student.studentId);
+            } 
+            catch (Exception e) 
+            {
+                
+            }
+
+            System.out.printf(
+                "\nRegistro de pagos para un alumno que ha cursado previamente\n" +
+                "Ciclo escolar: %s\n",
+                currentPeriod.getPeriodString());
+            
+            if (lastGroup != null)
+            {
+                System.out.printf(
+                "Grupo anterior: %d-%s\n" +
+                "Escolaridad: %s\n",
+                lastGroup.grade,
+                lastGroup.letter,
+                lastGroup.level.description);
+            }
+        }
 
         // Solicita un nivel educativo
         selectedLevel = helper.selectEducationLevel();
@@ -435,7 +459,15 @@ public class PaymentRegistrationPanel extends BasePanel
         // Verifica si se pudo registrar el pago
         if (paymentRegistered)
         {
-            // realizar registro en grupo
+            try 
+            {
+                // Intenta registrar el alumno en el grupo
+                dbContext.registerStudentInGroup(student, group);
+            }
+            catch (Exception e)
+            {
+                System.out.println("Error al registrar el alumno en un grupo");
+            }
         }
     }
 
@@ -549,7 +581,7 @@ public class PaymentRegistrationPanel extends BasePanel
         {
             var enrollment = (EnrollmentFee)fee;
             return String.format(
-                "Inscripció para %s (%d-%d)|$%.2f",
+                "Inscripción para %s (%d-%d)|$%.2f",
                 enrollment.level.description, // nivel
                 enrollment.period.startingDate.getYear(),
                 enrollment.period.endingDate.getYear(),

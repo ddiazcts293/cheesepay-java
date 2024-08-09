@@ -184,6 +184,47 @@ public class DbContext
         return array;
     }
 
+    public Group getStudentLastGroup(String studentId) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "g.numero AS number, " +
+            "g.grado AS grade, " +
+            "g.letra AS letter, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "ne.codigo AS level, " +
+            "ne.descripcion AS description " +
+            "FROM grupos AS g " +
+            "INNER JOIN ciclos_escolares AS ce ON g.ciclo = ce.codigo " +
+            "INNER JOIN grupos_alumnos AS ga ON g.numero = ga.grupo " +
+            "INNER JOIN alumnos AS a ON ga.alumno = a.matricula " +
+            "INNER JOIN niveles_educativos AS ne ON g.nivel = ne.codigo " +
+            "WHERE a.matricula = ? " +
+            "ORDER BY g.grado DESC " +
+            "LIMIT 1";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, studentId);
+        var resultSet = statement.executeQuery();
+        Group groupFound = null;
+
+        if (resultSet.next())
+        {
+            groupFound = new Group();
+            groupFound.number = resultSet.getInt("number");
+            groupFound.grade = resultSet.getInt("grade");
+            groupFound.letter = resultSet.getString("letter");
+            groupFound.period.code = resultSet.getString("period");
+            groupFound.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            groupFound.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            groupFound.level.code = resultSet.getString("level");
+            groupFound.level.description = resultSet.getString("description");
+        }
+
+        return groupFound;
+    }
+
     public TutorPhone[] getTutorPhones(int tutorNumber) throws SQLException
     {
         ArrayList<TutorPhone> list = new ArrayList<>();
@@ -525,7 +566,7 @@ public class DbContext
         return array;
     }
 
-    /* Consultas de registro/actualización de tutores y alumnos */
+    /* Consultas de registro/actualización de tutores, alumnos y grupos */
 
     /**
      * Realiza el registro de un alumno.
@@ -595,6 +636,25 @@ public class DbContext
         // Realiza la consulta para asociar un tutor con un alumno
         var statement = getConnection().prepareStatement(sqlQuery);
         statement.setInt(1, tutor.number);
+        statement.setString(2, student.studentId);
+        statement.executeUpdate();
+    }
+
+    /**
+     * Realiza la asociación de un alumno y un grupo.
+     * @param student Objeto con la información de un alumno
+     * @param group Objeto con la información de un grupo
+     * @throws SQLException
+     */
+    public void registerStudentInGroup(Student student, Group group)
+        throws SQLException
+    {
+        // Define una consulta para insertar un registro
+        String sqlQuery = "INSERT INTO grupos_alumnos VALUES (?,?)";
+
+        // Realiza la consulta para asociar un tutor con un alumno
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setInt(1, group.number);
         statement.setString(2, student.studentId);
         statement.executeUpdate();
     }
