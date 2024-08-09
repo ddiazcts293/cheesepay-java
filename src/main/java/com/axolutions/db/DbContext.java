@@ -1899,7 +1899,7 @@ public class DbContext
         if (!fechaLimiteColumnExists)
         {
             sqlQuery = "ALTER TABLE `mensualidades` \n" +
-                "ADD `fechaLimite` DATE NOT NULL AFTER `codigo`;";
+                "ADD `fechaLimite` DATE NOT NULL DEFAULT '0001-01-01' AFTER `codigo`;";
             
             statement = getConnection().createStatement();
             statement.execute(sqlQuery);
