@@ -3,9 +3,12 @@ package com.axolutions.panel;
 import com.axolutions.AppContext;
 import com.axolutions.db.type.*;
 import com.axolutions.db.type.fee.*;
+import com.axolutions.util.Menu;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.time.Month;
+import java.time.Period;
 import java.time.LocalDate;
 
 public class PaymentRegistrationPanel extends BasePanel
@@ -47,6 +50,7 @@ public class PaymentRegistrationPanel extends BasePanel
         boolean isNewStudent = false;
         Student student = null;
         Tutor selectedTutor = null;
+        Group group = null;
         Tutor[] tutors;
 
         // Obtiene la instancia del alumno transferido desde otro panel
@@ -64,12 +68,14 @@ public class PaymentRegistrationPanel extends BasePanel
 
         try
         {
-            // Intenta obtener la lista de tutores registrados
+            // Intenta obtener la lista de tutores registrados con el alumno
             tutors = dbContext.getStudentTutors(student.studentId);
 
+            // Intenta obtener el grupo actual del estudiante
+            group = dbContext.getStudentCurrentGroup(student.studentId);
+
             // Intenta averiguar si el alumno debe pagar inscripción
-            isNewStudent = dbContext.checkForEnrollmentNeeded(
-                student.studentId);
+            isNewStudent = dbContext.isNewStudent(student.studentId);
         }
         catch (Exception e)
         {
@@ -90,237 +96,189 @@ public class PaymentRegistrationPanel extends BasePanel
 
         // Solicita que se seleccione a un tutor
         selectedTutor = helper.selectFromList(
-            "Seleccione a un tutor",
+            "\nSeleccione a un tutor para registrar en el pago",
             "Parentesco|Nombre|Correo electronico|RFC",
             tutors);
 
         // Verifica si no se seleccionó a un tutor
         if (selectedTutor == null)
         {
+            // Termina la función
             return null;
         }
 
-        if (isNewStudent)
+        /*
+         * Aqui entran en juego varias modalidades:
+         * - El alumno es de nuevo ingreso -> Paga todo
+         * - El alumno acaba de pasar de grado -> Paga todo
+         * - El alumno esta cursando actualmente -> Paga algo
+         */
+
+        // Verifica si el alumno está asignado a un grupo
+        if (group != null)
         {
-            //registerNewStudentPayment(student, selectedTutor);
+            // Crea un nuevo pago en el que se puede cobrar por mensualidades,
+            // uniformes y/o eventos especiales
+            createPayment(student, selectedTutor, group);
+        }
+        // Si no, verifica si el alumno es de nuevo ingreso, es decir, si no ha
+        // estado en algún grupo antes
+        else if (isNewStudent)
+        {
+            // Crea un nuevo pago para un alumno de nuevo ingreso
+            createPaymentForNewStudent(student, selectedTutor);
         }
         else
         {
-            createPayment(student, selectedTutor);
+
         }
 
+        // Termina la función indicando que deberá volver al panel anterior
         return null;
     }
 
     /**
-     * Crea un pago.
+     * Crea un nuevo pago.
      * @param student Alumno
      * @param tutor Tutor
+     * @param group Grupo
      */
-    private void createPayment(Student student, Tutor tutor)
+    private void createPayment(Student student, Tutor tutor, Group group)
     {
-        HashMap<String, Fee> fees = new HashMap<>();
-        ArrayList<String> feeStrings = new ArrayList<>();
+        ArrayList<Fee> fees = new ArrayList<>();
+        createPayment(student, tutor, group, fees);
+    }
 
-        LocalDate date = LocalDate.now();
-        float totalAmount = 0f;
-        FeeType feeType;
+    /**
+     * Crea un nuevo pago.
+     * @param student Alumno
+     * @param tutor Tutor
+     * @param group Grupo
+     * @param fees Lista de pagos
+     */
+    private boolean createPayment(Student student, Tutor tutor, Group group, ArrayList<Fee> fees)
+    {
+        // Declara algunas variables de datos generales
+        LocalDate date = LocalDate.now(); // Fecha de pago
+        float totalAmount = 0f; // Total
         String option;
-        Group group;
-        Fee fee;
+        boolean successful = false;
 
-        // Intenta obtener el grupo actual del alumno
-        try
-        {
-            group = dbContext.getStudentCurrentGroup(student.studentId);
-        }
-        catch (Exception e)
-        {
-            System.out.println(
-                "Error al intentar obtener la información del grupo " +
-                "actual del alumno");
-
-            return;
-        }
-
+        // Crea una cadena de texto que contiene la información del pago
+        String title = String.format(
+            "\nNuevo pago\n" +
+            "Fecha de realización: %s\n" +
+            "Matricula: %s\n" +
+            "Alumno: %s\n" +
+            "Grupo: %d-%s\n" +
+            "Nivel educativo: %s\n" +
+            "Ciclo escolar: %s\n" +
+            "Tutor: %s\n\n" +
+            "Lista de cobros",
+            date,
+            student.studentId,
+            student.getFullName(),
+            group.grade,
+            group.letter,
+            group.level.description,
+            group.period.getPeriodString(),
+            tutor.getFullName());
+            
         // Bucle para permitir agregar varios cobros
         do
         {
-            // Pregunta por el tipo de cobro a agregar
-            feeType = helper.selectFeeType();
-            if (feeType == FeeType.Unknown)
+            // Calcula el total del pago en cada ciclo
+            totalAmount = calculateTotalAmount(fees);
+
+            // Crea una cadena de texto que contiene el total y la cantidad de
+            // cobros
+            String footer = String.format("Total: $%.2f\n" +
+                "Cantidad de cobros: %d",
+                totalAmount, // Monto total
+                fees.size()); // Cantidad de pagos
+
+            // Crea un menú para mostrar todos los cobros en el pago y así poder
+            // seleccionar uno para eliminarlo en caso de que sea necesario
+            Menu menu = helper.createMenu(title)
+                .setHeader("Concepto|Costo")
+                .setFooter(footer);
+
+            // Bucle que recorre la lista de cobros
+            for (int i = 0; i < fees.size(); i++) 
             {
+                // Obtiene el cobro por su indice dado por i
+                var item = fees.get(i);
+                String text = getFeeText(item);
+
+                menu.addItem(Integer.toString(i), text, true);
+            }
+            
+            menu.addItem("A", "Agregar cobro");
+
+            // Verifica si la lista de cobros no está vacia
+            if (!fees.isEmpty())
+            {
+                menu.addItem("P", "Pagar");
+            }
+
+            menu.addItem("C", "Cancelar");
+
+            // Muestra el menú y espera por una opción
+            option = menu.show(
+                "Elija un cobro para borarlo o una acción a realizar");
+
+            // Verifica si la opción elegida es "Agregar cobro"
+            if (option.equalsIgnoreCase("A"))
+            {
+                // Llama a la función que permite agregar pagos
+                addFeeToPayment(student, group.period, group.level, fees);
+            }
+            // Verifica si la opción elegida es "Cancelar"
+            else if (option.equalsIgnoreCase("C"))
+            {
+                // Confirma si realmente se desea abandonar
+                option = helper.showYesNoMenu("¿Está seguro?");
+
+                // Verifica si la opción recibida es "Si"
+                if (option.equalsIgnoreCase("S"))
+                {
+                    // Termina el bucle
+                    break;
+                }
+            }
+            // Verifica si la opción elegida es "Pagar"
+            else if (option.equalsIgnoreCase("P"))
+            {
+                // Registra el pago
+                int folio = registerPayment(
+                    student, 
+                    tutor, 
+                    date, 
+                    totalAmount, 
+                    fees);
+
+                if (folio != -1)
+                {
+                    System.out.printf(
+                        "\nPago #%d registrado correctamente\n",
+                        folio);
+                    
+                    successful = true;
+                }
                 break;
             }
-/* 
-            // Hace el pago correspondiente
-            switch (feeType)
+            // Si no
+            else
             {
-                // Inscripciones
-                case Enrollment:
-                {
-                    fee = helper.selectEnrollmentFee(group.period);
-
-                    if (fee != null && !fees.containsKey(fee.code))
-                    {
-                        String line = String.format(
-                            "Inscripció para %s (%d-%d)|$%.2f",
-                            fee.enrollment.level.description, // nivel
-                            fee.period.startingDate.getYear(),
-                            fee.period.endingDate.getYear(),
-                            fee.enrollment.cost); // costo
-
-                        fees.put(fee.code, fee);
-                        feeStrings.add(line);
-                        totalAmount += fee.enrollment.cost;
-                    }
-                    break;
-                }
-                // Mensualidades
-                case Monthly:
-                    fee = helper.selectMonthlyFee(group.period, group.level);
-
-                    if (fee != null && !fees.containsKey(fee.code))
-                    {
-                        String line = String.format(
-                            "Pago mensualidad %s para %s (%d-%d)|$%.2f",
-                            getMonthName(fee.monthly.month), // Mes
-                            fee.monthly.level.description, // nivel
-                            fee.period.startingDate.getYear(),
-                            fee.period.endingDate.getYear(),
-                            fee.monthly.cost); // costo
-
-                        fees.put(fee.code, fee);
-                        feeStrings.add(line);
-                        totalAmount += fee.monthly.cost;
-                    }
-                    break;
-                // Uniformes
-                case Uniform:
-                    fee = selectUniformFee(group.period, group.level);
-
-                    if (fee != null && !fees.containsKey(fee.code))
-                    {
-                        String line = String.format(
-                            "%s (%s) para %s|$%.2f",
-                            fee.uniform.concept,
-                            fee.uniform.size,
-                            fee.uniform.level.description,
-                            fee.uniform.cost);
-
-                        fees.put(fee.code, fee);
-                        feeStrings.add(line);
-                        totalAmount += fee.uniform.cost;
-                    }
-                    break;
-                // Papeleria
-                case Stationery:
-                    fee = selectStationeryFee(group.period, group.level);
-
-                    if (fee != null && !fees.containsKey(fee.code))
-                    {
-                        String line = String.format(
-                            "%s para %s|$%.2f",
-                            fee.stationery.concept,
-                            fee.stationery.level.description,
-                            fee.stationery.cost);
-
-                        fees.put(fee.code, fee);
-                        feeStrings.add(line);
-                        totalAmount += fee.stationery.cost;
-                    }
-                    break;
-                case SpecialEvent:
-                    fee = selectSpecialEventFee(group.period);
-
-                    if (fee != null && !fees.containsKey(fee.code))
-                    {
-                        String line = String.format(
-                            "%s %s|$%.2f",
-                            fee.specialEvent.concept,
-                            fee.specialEvent.scheduledDate,
-                            fee.specialEvent.cost);
-
-                        fees.put(fee.code, fee);
-                        feeStrings.add(line);
-                        totalAmount += fee.specialEvent.cost;
-                    }
-                    break;
-                case Maintenance:
-                    fee = selectMaintenanceFee(group.period);
-
-                    if (fee != null && !fees.containsKey(fee.code))
-                    {
-                        String line = String.format(
-                            "%s|$%.2f",
-                            fee.maintenance.concept,
-                            fee.maintenance.cost);
-
-                        fees.put(fee.code, fee);
-                        feeStrings.add(line);
-                        totalAmount += fee.maintenance.cost;
-                    }
-                    break;
-                default:
-                    break;
+                // Borra el elemento seleccionado
+                int index = Integer.parseInt(option);
+                fees.remove(index);
             }
 
-            System.out.println();
+        // Repite el bucle infinitamente
+        } while (true);
 
-            // Imprime los cobros agregados al pago
-            String header = "Concepto|Costo";
-            console.printAsTable(header, feeStrings.toArray());
-
-            // Crea una cadena con la información del pago
-            String info = String.format("Información de pago:\n" + 
-                "Alumno: %s %s %s\n" +
-                "Tutor: %s %s %s\n" +
-                "Fecha de pago: %s\n\n" +
-                "Total: $%.2f\n",
-                student.name,
-                student.firstSurname,
-                student.lastSurname,
-                tutor.name,
-                tutor.firstSurname,
-                tutor.lastSurname,
-                date,
-                totalAmount);
-            
-            // Pregunta si se desea realiza otro pago
-            option = helper.createMenu(info)
-                .addItem("A", "Agregar más cobros")
-                .addItem("T", "Terminar y registrar pago")
-                .addItem("C", "Cancelar")
-                .show("Seleccione una opción");
-
-            switch (option) 
-            {
-                // Terminar y tegistrar pagos
-                case "T":
-                {
-                    FeeXX[] array = new FeeXX[fees.size()];
-                    fees.values().toArray(array);
-                    registerPayment(student, tutor, date, totalAmount, array);
-                    break;
-                }
-                // Cancelar
-                case "C":
-                    // Pregunta si realmente quiere cancelar la operación
-                    option = helper.showYesNoMenu("¿Está seguro?");
-                    if (option.equalsIgnoreCase("S"))
-                    {
-                        // Termina el proceso de registro de pagos
-                        return;
-                    }
-                default:
-                    break;
-            }
-            */
-
-        option = "";
-
-        // Repite el bucle mientras se elija "Si"
-        } while (option.equalsIgnoreCase("A"));
+        return successful;
     }
 
     /**
@@ -328,13 +286,71 @@ public class PaymentRegistrationPanel extends BasePanel
      * @param student Alumno
      * @param tutor Tutor
      */
-    private void createNewStudentPayment(Student student, Tutor tutor)
+    private void createPaymentForNewStudent(Student student, Tutor tutor)
     {
-        Group[] groups;
-        Group selectedGroup = null;
+        /*
+         * Comportamiento de ciclos escolares:
+         * Por defecto, el programa seleccionará el ciclo actual real, pero si
+         * a este le quedan menos de dos meses, selecciona al siguiente
+         */
+
         EducationLevel selectedLevel = null;
         SchoolPeriod currentPeriod = null;
-        int grade;
+        Group group = null;
+        int grade, maxGrade;
+
+        try
+        {
+            // Intenta obtener el ciclo actual
+            // currentPeriod = dbContext.getCurrentPeriod();
+            // Por ahora, se selecciona de una lista
+            currentPeriod = helper.selectSchoolPeriod(); 
+/*
+            // Verifica si el ciclo actual no sea nulo
+            if (currentPeriod != null)
+            {
+                // Obtiene el periodo de fechas entre la fecha actual y la fecha
+                // de fin del ciclo
+                Period period = Period.between(
+                    LocalDate.now(),
+                    currentPeriod.endingDate);
+
+                // Obtiene la cantidad de meses restantes
+                int remainingMonths = period.getMonths() + period.getYears() * 12;
+
+                // Verifica si la cantidad de meses restantes es menor o igual a
+                // dos
+                if (remainingMonths <= 2)
+                {
+                    // De ser así, establece el próximo ciclo escolar como el
+                    // periodo
+                    currentPeriod = dbContext.getNextPeriod(); // Por ahora no
+                }
+            }
+ */
+            if (currentPeriod == null)
+            {
+                System.out.println(
+                    "No se han registrado un nuevo ciclo escolar para la " +
+                    "fecha actual");
+            
+                // Finaliza la función
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            System.out.println(
+                "Error al obtener la información de los ciclos escolares");
+            
+            // Finaliza la función
+            return;
+        }
+
+        System.out.printf(
+            "\nRegistro de pagos para un alumno de nuevo ingreso\n" +
+            "Ciclo escolar: %s\n",
+            currentPeriod.getPeriodString());
 
         // Solicita un nivel educativo
         selectedLevel = helper.selectEducationLevel();
@@ -345,93 +361,287 @@ public class PaymentRegistrationPanel extends BasePanel
             return;
         }
 
-        System.out.printf(
-            "\nPagos de alumno de nuevo ingreso ciclo escolar: %d-%d\n",
-            currentPeriod.startingDate.getYear(),
-            currentPeriod.endingDate.getYear());
-
         try
         {
-            // Intenta obtener los grupos existentes para el nivel educativo
-            // seleccionado en el ciclo escolar actual
-            groups = dbContext.getGroups(currentPeriod.code, selectedLevel.code);
+            // Intenta obtener el grado máximo
+            maxGrade = dbContext.getMaxGrade(selectedLevel.code);
         }
         catch (Exception e)
         {
             System.out.println(
-                "Error al obtener los grupos en el ciclo actual y nivel " +
-                "educativo seleccionado");
-
+                "Error al obtener el grado máximo para el nivel seleccionado");
+            
+            // Termina el proceso
             return;
+        }
+
+        // Pide que se ingrese un grado
+        String prompt = String.format(
+            "Ingrese el grado del alumno (1-%d)",
+            maxGrade);
+
+        grade = console.readInt(prompt, 1, maxGrade);
+        
+        try 
+        {
+            // Intenta obtener el grupo asociado al grado
+            group = dbContext.getGroup(
+                selectedLevel.code, 
+                currentPeriod.code, 
+                grade);
+        }
+        catch (Exception e) 
+        {
+            System.out.println(
+                "Error al obtener el grupo para el grado y nivel seleccionado");
+            
+            // Termina el proceso
+            return;
+        }
+
+        ArrayList<Fee> fees = new ArrayList<>();
+        try
+        {
+            // Intenta obtener el cobro de inscripción
+            fees.add(dbContext.getEnrollmentFee(
+                currentPeriod.code, 
+                selectedLevel.code));
+            // Intenta obtener el cobro de papeleria
+            fees.add(dbContext.getStationeryFee(
+                currentPeriod.code, 
+                selectedLevel.code, 
+                grade));
+            // Intenta obtener el cobro de mensualidad
+            fees.add(dbContext.getMonthlyFee(
+                currentPeriod.code,
+                selectedLevel.code, 
+                //LocalDate.now()
+                currentPeriod.startingDate
+                ));
+            // Intenta obtener el cobro de mantenimiento
+            fees.add(dbContext.getMaintenanceFee(currentPeriod.code));
+        }
+        catch (Exception e)
+        {
+            System.out.println("Error al obtener los cobros requeridos");
+
+            // Termina el proceso
+            return;
+        }
+
+        // Llama a la función para crear el pago y proceder a registrarlo
+        boolean paymentRegistered = createPayment(student, tutor, group, fees);
+
+        // Verifica si se pudo registrar el pago
+        if (paymentRegistered)
+        {
+            // realizar registro en grupo
         }
     }
 
     /**
-     * Registra un pago.
-     * @param student
-     * @param tutor
-     * @param fees
+     * Agrega un cobro a un pago.
+     * @param student Alumno
+     * @param period Ciclo escolar
+     * @param level Nivel educativo
+     * @param fees Lista de cobros
+     */
+    private void addFeeToPayment(
+        Student student, 
+        SchoolPeriod period, 
+        EducationLevel level,
+        ArrayList<Fee> fees)
+    {
+        // Declara la variable para almacenar el cobro seleccionado
+        Fee fee;
+
+        // Bucle para repetir el menú de selección de categoría
+        do
+        {
+            fee = null;
+
+            // Muestra el menú de tipo de pago y espera por una opción
+            String selectedCategory = helper.createMenu()
+                .setTitle("\nSeleccione un tipo de cobro")
+                .addItem("M", "Mensualidades")
+                .addItem("U", "Uniformes")
+                .addItem("E", "Eventos especiales")
+                .addBlankLine()
+                .addItem("C", "Cancelar")
+                .show();
+
+            // Procesa la categoría elegida
+            switch (selectedCategory)
+            {
+                // Mensualidad
+                case "M":
+                    fee = helper.selectMonthlyFee(
+                        period, 
+                        level, 
+                        "\nSeleccione una mensualidad para pagar");
+
+                    break;
+                // Uniforme
+                case "U":
+                    fee = helper.selectUniformFee(
+                        period, 
+                        level, 
+                        "\nSeleccione un cobro de uniforme para pagar");
+
+                    break;
+                // Evento especial
+                case "E":
+                    fee = helper.selectSpecialEventFee(
+                        period, 
+                        "\nSeleccione un evento especial para pagar");
+
+                    break;
+
+                // Preterminado; cancelar
+                default:
+                    return;
+            }
+
+            // Bucle que verifica que no existan cobros repetidos
+            for (var itemInList : fees) 
+            {
+                if (itemInList.code.equals(fee.code))
+                {
+                    System.out.println(
+                        "No es posible repetir un mismo cobro en un solo pago");
+
+                    fee = null;
+                }
+            }
+
+        // Repetir mientras no se seleccione un cobro
+        } while (fee == null);
+
+        // Agrega el núevo cobro a la lista
+        fees.add(fee);
+    }
+
+    /**
+     * Calcula el monto total de un pago
+     * @param fees Lista de cobros
      * @return
      */
-    private void registerPayment(
+    private float calculateTotalAmount(ArrayList<Fee> fees)
+    {
+        float result = 0f;
+
+        for (var item : fees) 
+        {
+            result += item.cost;
+        }
+
+        return result;
+    }
+
+    /**
+     * Obtiene una cadena que representa un cobro.
+     * @param fee Cobro
+     * @return
+     */
+    private String getFeeText(Fee fee)
+    {
+        if (fee instanceof EnrollmentFee)
+        {
+            var enrollment = (EnrollmentFee)fee;
+            return String.format(
+                "Inscripció para %s (%d-%d)|$%.2f",
+                enrollment.level.description, // nivel
+                enrollment.period.startingDate.getYear(),
+                enrollment.period.endingDate.getYear(),
+                enrollment.cost); // costo
+        }
+        else if (fee instanceof MonthlyFee)
+        {
+            var monthly = (MonthlyFee)fee;
+            return String.format(
+                "Mensualidad %s para %s (%d-%d)|$%.2f",
+                helper.getMonthName(monthly.dueDate.getMonth()), // Mes
+                monthly.level.description, // nivel
+                monthly.period.startingDate.getYear(), // Ciclo
+                monthly.period.endingDate.getYear(),
+                monthly.cost); // costo
+        }
+        else if (fee instanceof UniformFee)
+        {
+            var uniform = (UniformFee)fee;
+            return String.format(
+                "%s (%s) para %s|$%.2f",
+                uniform.concept,
+                uniform.size,
+                uniform.level.description,
+                uniform.cost);
+        }
+        else if (fee instanceof StationeryFee)
+        {
+            var stationery = (StationeryFee)fee;
+            return String.format(
+                "%s para %s|$%.2f",
+                stationery.concept,
+                stationery.level.description,
+                stationery.cost);
+        }
+        else if (fee instanceof SpecialEventFee)
+        {
+            var specialEvent = (SpecialEventFee)fee;
+            return String.format(
+                "%s %s|$%.2f",
+                specialEvent.concept,
+                specialEvent.scheduledDate,
+                specialEvent.cost);
+        }
+        else if (fee instanceof MaintenanceFee)
+        {
+            var maintenance = (MaintenanceFee)fee;
+            return String.format(
+                "%s|$%.2f",
+                maintenance.concept,
+                maintenance.cost);
+
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Registra un pago en la base de datos.
+     * @param student
+     * @param tutor
+     * @param date
+     * @param totalAmount
+     * @param fees
+     */
+    private int registerPayment(
         Student student, 
         Tutor tutor,
         LocalDate date,
         float totalAmount,
-        Fee[] fees)
+        ArrayList<Fee> fees)
     {
         try 
         {
-            dbContext.registerPayment(
+            Fee[] feeArray = new Fee[fees.size()];
+            fees.toArray(feeArray);
+
+            int paymentFolio = dbContext.registerPayment(
                 student.studentId, 
                 tutor.number, 
                 date, 
                 totalAmount, 
-                fees);
+                feeArray);
+
+            return paymentFolio;
         } 
         catch (Exception e) 
         {
-            System.out.println("Error al registrar el pago");
-        }
-    }
-
-    // Funciones auxiliares
-
-    /**
-     * Obtiene el nombre de un mes en español.
-     * @param month Mes
-     * @return Cadena
-     */
-    private String getMonthName(Month month)
-    {
-        switch (month)
-        {
-            case JANUARY:
-                return "enero";
-            case FEBRUARY:
-                return "febrero";
-            case MARCH:
-                return "marzo";
-            case APRIL:
-                return "abril";
-            case MAY:
-                return "mayo";
-            case JUNE:
-                return "junio";
-            case JULY:
-                return "julio";
-            case AUGUST:
-                return "agosto";
-            case SEPTEMBER:
-                return "septiembre";
-            case OCTOBER:
-                return "octubre";
-            case NOVEMBER:
-                return "noviembre";
-            case DECEMBER:
-                return "diciembre";
-            default:
-                return "";
+            System.out.println("Error al intentar registrar el pago");
+            return -1;
         }
     }
 }

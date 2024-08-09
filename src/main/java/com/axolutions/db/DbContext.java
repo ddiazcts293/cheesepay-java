@@ -683,6 +683,136 @@ public class DbContext
 
     /* Consultas de cobros */
 
+    public EnrollmentFee getEnrollmentFee(String periodCode, String levelCode) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "c.codigo AS code, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "i.codigo AS enrollmentId, " +
+            "i.costo AS cost, " +
+            "ne.codigo AS level, " +
+            "ne.descripcion AS levelDescription " +
+            "FROM cobros AS c " +
+            "INNER JOIN inscripciones AS i ON c.inscripcion = i.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN niveles_educativos AS ne ON i.nivel = ne.codigo " +
+            "WHERE ce.codigo = ? AND ne.codigo = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, periodCode);
+        statement.setString(2, levelCode);
+        var resultSet = statement.executeQuery();
+        EnrollmentFee fee = null;
+
+        if (resultSet.next())
+        {
+            fee = new EnrollmentFee();
+            fee.code = resultSet.getString("code");
+            fee.period.code = resultSet.getString("period");
+            fee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            fee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            fee.enrollmentCode = resultSet.getString("enrollmentId");
+            fee.cost = resultSet.getFloat("cost");
+            fee.level.code = resultSet.getString("level");
+            fee.level.description = resultSet.getString("levelDescription");
+        }
+
+        return fee;
+    }
+
+    public MonthlyFee getMonthlyFee(String periodCode, String levelCode, LocalDate date) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "c.codigo AS code, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "m.codigo AS monthlyCode, " +
+            "m.fechaLimite AS dueDate, " +
+            "m.mesVacacional AS isVacationMonth, " +
+            "m.costo AS cost, " +
+            "ne.codigo AS level, " +
+            "ne.descripcion AS levelDescription " +
+            "FROM cobros AS c " +
+            "INNER JOIN mensualidades AS m ON c.mensualidad = m.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN niveles_educativos AS ne ON m.nivel = ne.codigo " +
+            "WHERE ce.codigo = ? AND ne.codigo = ? AND m.fechaLimite >= ? " +
+            "ORDER BY dueDate LIMIT 1";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, periodCode);
+        statement.setString(2, levelCode);
+        statement.setDate(3, Date.valueOf(date));
+
+        var resultSet = statement.executeQuery();
+        MonthlyFee fee = null;
+
+        if (resultSet.next())
+        {
+            fee = new MonthlyFee();
+            fee.code = resultSet.getString("code");
+            fee.period.code = resultSet.getString("period");
+            fee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            fee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            fee.monthlyCode = resultSet.getString("monthlyCode");
+            fee.dueDate = resultSet.getDate("dueDate").toLocalDate();
+            fee.isVacationMonth = resultSet.getBoolean("isVacationMonth");
+            fee.cost = resultSet.getFloat("cost");
+            fee.level.code = resultSet.getString("level");
+            fee.level.description = resultSet.getString("levelDescription");
+        }
+
+        return fee;
+    }
+
+    public StationeryFee getStationeryFee(String periodCode, String levelCode, int grade) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "c.codigo AS code, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "p.codigo AS stationeryCode, " +
+            "p.concepto AS concept, " +
+            "p.grado AS grade, " +
+            "p.costo AS cost, " +
+            "ne.codigo AS level, " +
+            "ne.descripcion AS levelDescription " +
+            "FROM cobros AS c " +
+            "INNER JOIN papeleria AS p ON c.papeleria = p.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
+            "INNER JOIN niveles_educativos AS ne ON p.nivel = ne.codigo " +
+            "WHERE ce.codigo = ? AND ne.codigo = ? AND p.grado = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, periodCode);
+        statement.setString(2, levelCode);
+        statement.setInt(3, grade);
+
+        var resultSet = statement.executeQuery();
+        StationeryFee fee = null;
+
+        while (resultSet.next())
+        {
+            fee = new StationeryFee();
+            fee.code = resultSet.getString("code");
+            fee.period.code = resultSet.getString("period");
+            fee.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            fee.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            fee.starioneryCode = resultSet.getString("stationeryCode");
+            fee.concept = resultSet.getString("concept");
+            fee.grade = resultSet.getInt("grade");
+            fee.cost = resultSet.getFloat("cost");
+            fee.level.code = resultSet.getString("level");
+            fee.level.description = resultSet.getString("levelDescription");
+        }
+
+        return fee;
+    }
+
     public EnrollmentFee[] getEnrollmentFees(String periodCode) throws SQLException
     {
         String sqlQuery = "SELECT " +
@@ -1440,41 +1570,57 @@ public class DbContext
     // Nuevas consultas
 
     /**
-     * Verifica si un estudiante necesita pagar inscripción
-     * @param studentId Matricula de estudiante
+     * Verifica si un estudiante es de nuevo ingreso.
+     * @param studentId
      * @return
      * @throws SQLException
      */
-    public boolean checkForEnrollmentNeeded(String studentId) throws SQLException
+    public boolean isNewStudent(String studentId) throws SQLException
     {
-        // Obtiene el próximo ciclo escolar
-        var period = getNextPeriod();
-
-        // Verifica si el resultado obtenido es nulo, en ese caso se debe a que
-        // aun falta mucho para que termine el ciclo escolar actual o que el
-        // siguiente ciclo todavía no es registrado
-        if (period == null)
-        {
-            // Obtiene el ciclo escolar actual
-            period = getCurrentPeriod();
-        }
-
         String sqlQuery = "SELECT " +
-            "COUNT(p.folio) = 0 AS enrollmentRequired " +
+            "COUNT(ga.grupo) = 0 AS isNewStudent " +
             "FROM alumnos AS a " +
-            "INNER JOIN pagos AS p ON a.matricula = p.alumno " +
-            "INNER JOIN detalles_pago AS dp ON p.folio = dp.folioPago " +
-            "INNER JOIN cobros AS c ON dp.codigoCobro = c.codigo " +
-            "INNER JOIN ciclos_escolares AS ce ON c.ciclo = ce.codigo " +
-            "WHERE a.matricula = ? AND ce.codigo = ?";
+            "INNER JOIN grupos_alumnos AS ga ON a.matricula = ga.alumno " +
+            "WHERE a.matricula = ?";
 
         var statement = getConnection().prepareStatement(sqlQuery);
         statement.setString(1, studentId);
-        statement.setString(2, period.code);
         var resultSet = statement.executeQuery();
 
-        resultSet.next();
-        return resultSet.getBoolean("enrollmentRequired");
+        if (resultSet.next())
+        {
+            return resultSet.getBoolean("isNewStudent");
+        }
+
+        // Se supone que nunca debería llegar aquí
+        return false;
+    }
+
+    /**
+     * Obtiene el grado máximo para un nivel educativo.
+     * @param educationLevel
+     * @return
+     * @throws SQLException
+     */
+    public int getMaxGrade(String educationLevel) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "MAX(g.grado) AS maxGrade " +
+            "FROM grupos AS g " +
+            "INNER JOIN niveles_educativos AS ne ON g.nivel = ne.codigo " +
+            "WHERE ne.codigo = ?";
+
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, educationLevel);
+        var resultSet = statement.executeQuery();
+
+        if (resultSet.next())
+        {
+            return resultSet.getInt("maxGrade");
+        }
+
+        // Se supone que nunca debería llegar aquí
+        return 0;
     }
 
     /**
@@ -1483,7 +1629,7 @@ public class DbContext
      */
     public SchoolPeriod getCurrentPeriod() throws SQLException
     {
-        // Busca el ciclo escolar cuyo intervalo de fechas sea valio para la
+        // Busca el ciclo escolar cuyo intervalo de fechas sea válido para la
         // fecha actual
         String sqlQuery = "SELECT " +
             "ce.codigo AS code, " +
@@ -1515,15 +1661,14 @@ public class DbContext
      */
     public SchoolPeriod getNextPeriod() throws SQLException
     {
-        // Busca el ciclo escolar cuya fecha de inicio aun no llega pero no es
-        // mayor a dos meses partiendo de la fecha actual
+        // Busca el ciclo escolar cuya fecha de inicio aun no llega
         String sqlQuery = "SELECT " +
             "ce.codigo AS code, " +
             "ce.fechaInicio AS startingDate, " +
             "ce.fechaFin AS endingDate " +
             "FROM ciclos_escolares AS ce " +
-            "WHERE ce.fechaInicio > CURRENT_DATE() AND " +
-            "ce.fechaInicio <= DATE_ADD(CURRENT_DATE(), INTERVAL 2 MONTH) " +
+            "WHERE ce.fechaInicio > CURRENT_DATE() " +
+            "ORDER BY ce.fechaInicio " +
             "LIMIT 1";
 
         var statement = getConnection().createStatement();
@@ -1588,6 +1733,53 @@ public class DbContext
         return group;
     }
 
+    /**
+     * Obtiene el grupo para un grado en un nivel y ciclo escolar especifico.
+     * @param levelCode
+     * @param periodCode
+     * @param grade
+     * @return
+     * @throws SQLException
+     */
+    public Group getGroup(String levelCode, String periodCode, int grade) throws SQLException
+    {
+        String sqlQuery = "SELECT " +
+            "g.numero AS number, " +
+            "g.grado AS grade, " +
+            "g.letra AS letter, " +
+            "ce.codigo AS period, " +
+            "ce.fechaInicio AS startingDate, " +
+            "ce.fechaFin AS endingDate, " +
+            "ne.codigo AS level, " +
+            "ne.descripcion AS description " +
+            "FROM grupos AS g " +
+            "INNER JOIN niveles_educativos AS ne ON g.nivel = ne.codigo " +
+            "INNER JOIN ciclos_escolares AS ce ON g.ciclo = ce.codigo " +
+            "WHERE g.nivel = ? AND ce.codigo = ? AND g.grado = ?";    
+        
+        var statement = getConnection().prepareStatement(sqlQuery);
+        statement.setString(1, levelCode);
+        statement.setString(2, periodCode);
+        statement.setInt(3, grade);
+        var resultSet = statement.executeQuery();
+        Group group = null;
+
+        if (resultSet.next())
+        {
+            group = new Group();
+            group.number = resultSet.getInt("number");
+            group.grade = resultSet.getInt("grade");
+            group.letter = resultSet.getString("letter");
+            group.period.code = resultSet.getString("period");
+            group.period.startingDate = resultSet.getDate("startingDate").toLocalDate();
+            group.period.endingDate = resultSet.getDate("endingDate").toLocalDate();
+            group.level.code = resultSet.getString("level");
+            group.level.description = resultSet.getString("description");
+        }
+
+        return group;
+    }
+
     public int registerPayment(
         String studentId,
         int tutorId,
@@ -1616,21 +1808,25 @@ public class DbContext
         paymentFolio = resultSet.getInt(1);
 
         // Paso 2. Registrar los cobros de un pago
-        sqlQuery = "INSERT INTO detalles_pago VALUES\n";
+        sqlQuery = "INSERT INTO detalles_pago VALUES (?,?)";
+        var statement2 = getConnection().prepareStatement(sqlQuery);
+
         for (int i = 0; i < fees.length; i++)
         {
             var item = fees[i];
-
+            statement2.setInt(1, paymentFolio);
+            statement2.setString(2, item.code);
+            statement2.addBatch();
+/*
             sqlQuery += String.format("(%d,'%s')\n", paymentFolio, item.code);
 
             if (i != fees.length - 1)
             {
                 sqlQuery += ",";
-            }
+            } */
         }
 
-        var statement2 = getConnection().createStatement();
-        statement2.executeUpdate(sqlQuery);
+        statement2.executeBatch();
 
         return paymentFolio;
     }

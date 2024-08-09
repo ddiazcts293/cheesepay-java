@@ -8,6 +8,11 @@ import com.axolutions.db.type.SchoolPeriod;
 public abstract class Fee 
 {
     /**
+     * Tipo de cobro.
+     */
+    private FeeType type;
+
+    /**
      * Código o identificador del cobro.
      */
     public String code;
@@ -21,4 +26,14 @@ public abstract class Fee
      * Ciclo escolar.
      */
     public SchoolPeriod period = new SchoolPeriod();
+
+    public Fee(FeeType type) 
+    {
+        this.type = type;
+    }
+
+    public FeeType getType() 
+    {
+        return type;
+    }
 }

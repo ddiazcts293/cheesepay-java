@@ -7,6 +7,14 @@ import java.time.LocalDate;
  */
 public class SpecialEventFee extends Fee 
 {
+    public SpecialEventFee()
+    {
+        super(FeeType.SpecialEvent);
+    }
+
+    /**
+     * Código de evento especial.
+     */
     public String specialEventCode;
 
     /**

@@ -606,7 +606,7 @@ public class InfoPanel extends BasePanel
                 "#%d|%s|%s|%s|$%.2f|%s",
                 item.paymentFolio,
                 item.paymentDate,
-                item.paidMonth.getMonth(),
+                helper.getMonthName(item.paidMonth.getMonth()),
                 item.level.description,
                 item.cost,
                 item.tutorName);

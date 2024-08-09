@@ -8,6 +8,14 @@ import com.axolutions.db.type.EducationLevel;
  */
 public class MonthlyFee extends Fee
 {
+    public MonthlyFee()
+    {
+        super(FeeType.Monthly);
+    }
+
+    /**
+     * Código de mensualidad.
+     */
     public String monthlyCode;
 
     /**

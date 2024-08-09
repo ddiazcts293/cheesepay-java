@@ -46,6 +46,7 @@ public class Menu
     private ArrayList<MenuItem> items;
     private String title;
     private String header;
+    private String footer;
     private int itemCount;
 
     /**
@@ -59,6 +60,7 @@ public class Menu
         this.items = new ArrayList<>();
         this.title = title;
         this.header = null;
+        this.footer = null;
         this.itemCount = 0;
     }
 
@@ -136,7 +138,19 @@ public class Menu
     }
 
     /**
-     * Establece una cabecera para las opciones del menú
+     * Establece un pie para el menú
+     * @param footer Pie
+     * @return Referencia al propio menú
+     */
+    public Menu setFooter(String footer)
+    {
+        this.footer = footer;
+        return this;
+    }
+
+    /**
+     * Establece una cabecera para las opciones del menú cuando se formatea como
+     * tabla.
      * @param header Cabecera
      * @return Referencia al propio menú
      */
@@ -221,6 +235,12 @@ public class Menu
         for (String string : linesToPrintNormally) 
         {
             System.out.println(string);
+        }
+
+        // Verifica si se establecio un pie de menú
+        if (footer != null && !footer.isEmpty())
+        {
+            System.out.printf("\n%s\n", footer);
         }
     
         // Imprime un salto de línea y establece un punto de referencia para 

@@ -8,6 +8,13 @@ public class SchoolPeriod
     public LocalDate startingDate;
     public LocalDate endingDate;
     
+    public String getPeriodString()
+    {
+        return String.format("%d-%d",
+            startingDate.getYear(),
+            endingDate.getYear());
+    }
+
     @Override
     public String toString() 
     {

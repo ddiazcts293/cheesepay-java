@@ -7,6 +7,14 @@ import com.axolutions.db.type.EducationLevel;
  */
 public class EnrollmentFee extends Fee
 {
+    public EnrollmentFee() 
+    {
+        super(FeeType.Enrollment);
+    }
+
+    /**
+     * Código de inscripción
+     */
     public String enrollmentCode;
 
     /**

@@ -7,6 +7,14 @@ import com.axolutions.db.type.EducationLevel;
  */
 public class StationeryFee extends Fee
 {
+    public StationeryFee()
+    {
+        super(FeeType.Stationery);
+    }
+    
+    /**
+     * Código de papeleria.
+     */
     public String starioneryCode;
 
     /**

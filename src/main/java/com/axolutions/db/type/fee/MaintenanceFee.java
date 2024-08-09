@@ -5,6 +5,11 @@ package com.axolutions.db.type.fee;
  */
 public class MaintenanceFee extends Fee
 {
+    public MaintenanceFee()
+    {
+        super(FeeType.Maintenance);
+    }
+
     /**
      * Número.
      */

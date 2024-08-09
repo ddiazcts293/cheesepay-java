@@ -21,6 +21,17 @@ public class Student
     public SchoolPeriod period = new SchoolPeriod();
     public EducationLevel level = new EducationLevel();
     
+    public String getFullName()
+    {
+        // Retorna una cadena formateada que representa el nombre completo del
+        // individuo
+        return String.format(
+            "%s %s%s", 
+            name.trim(), 
+            firstSurname.trim(),
+            (lastSurname != null ? " " + lastSurname.trim() : ""));
+    }
+
     @Override
     public String toString() 
     {

@@ -7,6 +7,14 @@ import com.axolutions.db.type.EducationLevel;
  */
 public class UniformFee extends Fee
 {
+    public UniformFee()
+    {
+        super(FeeType.Uniform);
+    }
+
+    /**
+     * Código de uniforme.
+     */
     public String uniformCode;
     
     /**
