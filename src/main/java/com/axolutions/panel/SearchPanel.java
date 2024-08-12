@@ -133,21 +133,6 @@ public class SearchPanel extends BasePanel
             String text = console.readString("Texto");
             System.out.println();
 
-            // Codigo temporal solo para actualizar cierta información de la 
-            // base de datos
-            if (text.equalsIgnoreCase("xxxxx"))
-            {
-                try
-                {
-                    dbContext.updateDbSchema();
-                }
-                catch (Exception ex)
-                {
-                    System.out.println(ex.getMessage());
-                }
-                continue;
-            }
-
             // Verifica si la longitud de la cadena ingresada es mayor que cero
             if (text.length() > 0)
             {
