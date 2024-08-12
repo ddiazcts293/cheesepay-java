@@ -1,6 +1,11 @@
 # CheesePay v1.0
 
-Proyecto de cobros de una escuela
+Proyecto de cobros de una escuela.
+
+> ## NOTA
+> **Archivado el 11 de agosto de 2024.** 
+>
+> A partir de este punto ya no se harán modificaciones en el código fuente.
 
 ## Especificaciones
 
